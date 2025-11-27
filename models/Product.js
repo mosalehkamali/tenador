@@ -1,8 +1,10 @@
-const { default: mongoose } = require("mongoose");
-require("./Comment");
-require("./Athlete");
-require("./Brand");
-require("./Sport");
+import mongoose from "mongoose";
+import Athlete from "./Athlete";
+import Comment from "./Comment";
+import Brand from "./Brand";
+import Sport from "./Sport";
+import Variant from "./Variant";
+import { createSlug } from "../utils/slugify.js";
 
 const schema = new mongoose.Schema(
   {
@@ -18,15 +20,16 @@ const schema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    price: {
-      type: Number,
-      required: true,
-    },
     suitableFor: {
       type: String,
       required: true,
     },
     score: {
+      type: Number,
+      default: 0,
+      required: false,
+    },
+    basePrice: {
       type: Number,
       default: 0,
       required: false,
@@ -37,8 +40,12 @@ const schema = new mongoose.Schema(
     },
     tag: {
       type: [String],
+    },
+    mainImage: {
+      type: String,
       required: true,
     },
+    gallery: [String],
     brand: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Brand",
@@ -55,10 +62,11 @@ const schema = new mongoose.Schema(
       ref: "Sport",
       required: true,
     },
-    image: {
-      type: String,
-      required: true,
-    },
+    modelName: { type: String, required: true },
+
+    slug: { type: String, unique: true },
+
+    variants: [{ type: mongoose.Schema.Types.ObjectId, ref: "Variant" }],
   },
   {
     timestamps: true,
@@ -71,6 +79,9 @@ schema.virtual("comments", {
   foreignField: "product",
 });
 
-const model = mongoose.models.Product || mongoose.model("Product", schema);
+schema.pre("save", function (next) {
+  if (this.isModified("name")) this.slug = createSlug(this.name);
+  next();
+});
 
-module.exports = model;
+export default mongoose.models.Product || mongoose.model("Product", schema);
