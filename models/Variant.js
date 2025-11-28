@@ -24,13 +24,12 @@ const VariantSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-VariantSchema.pre("save", function (next) {
+VariantSchema.pre("save", function () {
   if (this.isModified("attributes")) {
     this.slug = createSlug(
       `${this.attributes.size || ""}-${this.attributes.color || ""}`
     );
   }
-  next();
 });
 
 export default mongoose.models.Variant || mongoose.model("Variant", VariantSchema);

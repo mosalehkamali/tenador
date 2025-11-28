@@ -44,11 +44,10 @@ const schema = new mongoose.Schema(
   { timestamps: true }
 );
 
-schema.pre("save", function (next) {
+schema.pre("save", function () {
   if (this.isModified("name")) {
     this.slug = this.name.toLowerCase().replace(/\s+/g, "-");
   }
-  next();
 });
 
 export default mongoose.models.Athlete || mongoose.model("Athlete", schema);

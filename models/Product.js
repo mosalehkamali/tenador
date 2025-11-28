@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { createSlug } from "../utils/slugify.js";
+import { createSlug } from "base/utils/slugify";
 
 const schema = new mongoose.Schema(
   {
@@ -74,9 +74,10 @@ schema.virtual("comments", {
   foreignField: "product",
 });
 
-schema.pre("save", function (next) {
-  if (this.isModified("name")) this.slug = createSlug(this.name);
-  next();
+schema.pre("save", function () {
+  if (this.isModified("name")) {
+    this.slug = this.name.toLowerCase().replace(/\s+/g, "-");
+  }
 });
 
 export default mongoose.models.Product || mongoose.model("Product", schema);
