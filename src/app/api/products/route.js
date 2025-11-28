@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import connectToDB from "@/lib/db";
+import connectToDB from "base/configs/db";
 
-import Brand from "@/models/Brand";
-import Sport from "@/models/Sport";
-import Athlete from "@/models/Athlete";
-import Product from "@/models/Product";
+import Brand from "base/models/Brand";
+import Sport from "base/models/Sport";
+import Athlete from "base/models/Athlete";
+import Product from "base/models/Product";
 
 export async function POST(req) {
   await connectToDB();

@@ -1,9 +1,4 @@
 import mongoose from "mongoose";
-import Athlete from "./Athlete";
-import Comment from "./Comment";
-import Brand from "./Brand";
-import Sport from "./Sport";
-import Variant from "./Variant";
 import { createSlug } from "../utils/slugify.js";
 
 const schema = new mongoose.Schema(

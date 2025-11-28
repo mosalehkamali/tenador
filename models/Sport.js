@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const sportSchema = new mongoose.Schema(
+const schema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -28,13 +28,11 @@ const sportSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-sportSchema.pre("save", function (next) {
+schema.pre("save", function (next) {
   if (this.isModified("name")) {
     this.slug = this.name.toLowerCase().replace(/\s+/g, "-");
   }
   next();
 });
 
-const model = mongoose.models.Sport || mongoose.model("Sport", schema);
-
-module.exports = model;
+export default mongoose.models.Sport || mongoose.model("Sport", schema);

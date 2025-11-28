@@ -45,6 +45,4 @@ schema.pre("save", function (next) {
   next();
 });
 
-const model = mongoose.models.Brand || mongoose.model("Brand", schema);
-
-module.exports = model;
+export default mongoose.models.Brand || mongoose.model("Brand", schema);

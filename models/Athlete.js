@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 require("./Sport")
 
-const athleteSchema = new mongoose.Schema(
+const schema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -44,13 +44,13 @@ const athleteSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-athleteSchema.pre("save", function (next) {
+schema.pre("save", function (next) {
   if (this.isModified("name")) {
     this.slug = this.name.toLowerCase().replace(/\s+/g, "-");
   }
   next();
 });
 
-const model = mongoose.models.Athlete || mongoose.model("Athlete", schema);
+export default mongoose.models.Athlete || mongoose.model("Athlete", schema);
 
-module.exports = model;
+

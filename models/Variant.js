@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { createSlug } from "../utils/slugify.js";
+import { createSlug } from "base/utils/slugify";
 
 const VariantSchema = new mongoose.Schema(
   {
