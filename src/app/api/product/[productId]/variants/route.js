@@ -11,7 +11,6 @@ export async function POST(req, { params }) {
 
     const { sku, price, images, stock, attributes } = body;
 
-    // 1) Validation
     if (!sku) {
       return Response.json(
         { error: "SKU is required" },
@@ -19,7 +18,6 @@ export async function POST(req, { params }) {
       );
     }
 
-    // 2) Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
       return Response.json(
@@ -28,7 +26,6 @@ export async function POST(req, { params }) {
       );
     }
 
-    // 3) Create variant
     const variant = await Variant.create({
       sku,
       price,
@@ -38,7 +35,6 @@ export async function POST(req, { params }) {
       productId
     });
 
-    // 4) Push variant ID to product
     product.variants.push(variant._id);
     await product.save();
 
