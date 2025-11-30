@@ -1,57 +1,68 @@
+import { NextResponse } from "next/server";
 import connectToDB from "base/configs/db";
-import Product from "base/models/Product";
 import Variant from "base/models/Variant";
+import Product from "base/models/Product";
+import Category from "base/models/Category";
 
 export async function POST(req, { params }) {
-  try {
-    await connectToDB();
+  await connectToDB();
 
-    const { productId } = await params;
+  try {
+    const { id: productId } = params;
     const body = await req.json();
 
-    const { sku, price, images, stock, attributes } = body;
+    const { sku, price, stock = 0, attributes, images = [] } = body;
 
-    if (!sku) {
-      return Response.json(
-        { error: "SKU is required" },
+    if (!sku || !price || !attributes) {
+      return NextResponse.json(
+        { error: "sku, price, and attributes are required" },
         { status: 400 }
       );
     }
 
-    const product = await Product.findById(productId);
+    // -------------------------------------
+    // 1) Find product
+    // -------------------------------------
+    const product = await Product.findById(productId).populate("category");
     if (!product) {
-      return Response.json(
+      return NextResponse.json(
         { error: "Product not found" },
         { status: 404 }
       );
     }
 
+    // -------------------------------------
+    // 2) Find the category
+    // -------------------------------------
+    const category = await Category.findById(product.category);
+    if (!category) {
+      return NextResponse.json(
+        { error: "Category not found" },
+        { status: 404 }
+      );
+    }
+
+    // -------------------------------------
+    // 3) Create Variant using your MODEL RULES
+    // -------------------------------------
     const variant = await Variant.create({
+      productId,
+      categoryId: category._id,   // REQUIRED in your model
       sku,
       price,
-      images,
       stock,
-      attributes,
-      productId
+      attributes,  // Map<String, String>
+      images
     });
 
-    product.variants.push(variant._id);
-    await product.save();
-
-    return Response.json(
-      {
-        message: "Variant added successfully",
-        variant
-      },
+    return NextResponse.json(
+      { message: "Variant created", variant },
       { status: 201 }
     );
 
   } catch (err) {
-    return Response.json(
-      {
-        error: "مشکلی پیش آمد.",
-        detail: err.message
-      },
+    return NextResponse.json(
+      { error: "Server error", detail: err.message },
       { status: 500 }
     );
   }

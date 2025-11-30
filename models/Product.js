@@ -1,51 +1,40 @@
 import mongoose from "mongoose";
 import { createSlug } from "base/utils/slugify";
 
-const schema = new mongoose.Schema(
+const ProductSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-    },
-    shortDescription: {
-      type: String,
-      required: true,
-    },
-    longDescription: {
-      type: String,
-      required: true,
-    },
-    suitableFor: {
-      type: String,
-      required: true,
-    },
-    score: {
-      type: Number,
-      default: 0,
-      required: false,
-    },
-    basePrice: {
-      type: Number,
-      default: 0,
-      required: false,
-    },
+    name: { type: String, required: true },
+
+    modelName: { type: String, required: true },
+
+    shortDescription: { type: String, required: true },
+
+    longDescription: { type: String, required: true },
+
+    suitableFor: { type: String, required: true },
+
+    score: { type: Number, default: 0 },
+
+    basePrice: { type: Number, default: 0 },
+
     category: {
-      type: String,
-      required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,  // مهم‌ترین آپدیت
     },
-    tag: {
-      type: [String],
-    },
-    mainImage: {
-      type: String,
-      required: true,
-    },
+
+    tag: [String],
+
+    mainImage: { type: String, required: true },
+
     gallery: [String],
+
     brand: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Brand",
       required: true,
     },
+
     athlete: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Athlete",
@@ -57,27 +46,42 @@ const schema = new mongoose.Schema(
       ref: "Sport",
       required: true,
     },
-    modelName: { type: String, required: true },
+
+    // از این به بعد مهم‌ترین قسمت
+    attributes: {
+      type: Object,
+      default: {},
+      // مثل: { size: "XL", color: "Red" }
+      // این با Category هماهنگ می‌شه
+    },
 
     slug: { type: String, unique: true },
 
     variants: [{ type: mongoose.Schema.Types.ObjectId, ref: "Variant" }],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-schema.virtual("comments", {
+
+// ---------------------
+// 🔥 Slug Generator
+// ---------------------
+ProductSchema.pre("save", function () {
+  if (this.isModified("name") || this.isModified("modelName")) {
+    this.slug = createSlug(`${this.name}-${this.modelName}`);
+  }
+});
+
+
+// ---------------------
+// 🔥 Virtual Comment
+// ---------------------
+ProductSchema.virtual("comments", {
   ref: "Comment",
   localField: "_id",
   foreignField: "product",
 });
 
-schema.pre("save", function () {
-  if (this.isModified("name")) {
-    this.slug = this.name.toLowerCase().replace(/\s+/g, "-");
-  }
-});
 
-export default mongoose.models.Product || mongoose.model("Product", schema);
+export default mongoose.models.Product ||
+  mongoose.model("Product", ProductSchema);

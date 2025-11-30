@@ -1,6 +1,6 @@
 import connectToDB from "base/configs/db";
 import Product from "base/models/Product";
-import Variant from "base/models/Variant";
+import Category from "base/models/Category";
 
 export async function POST(req) {
   try {
@@ -10,46 +10,84 @@ export async function POST(req) {
 
     const {
       name,
+      modelName,
       shortDescription,
       longDescription,
       suitableFor,
-      score,
       basePrice,
-      category,
+      category, // ObjectId از سمت کاربر
       tag,
       mainImage,
       gallery,
       brand,
       athlete,
       sport,
-      modelName,
-      variants = []
+      attributes, // object {}
     } = body;
 
-    // 1) ***** VALIDATION *****
-    if (!name || !brand || !sport || !modelName || !mainImage) {
-      return Response.json(
-        { error: "Required fields are missing!" },
-        { status: 400 }
-      );
-    }
-
-    // Check duplicate product by name
-    const exists = await Product.findOne({ name });
-    if (exists) {
-      return Response.json(
-        { error: "Product already exists" },
-        { status: 409 }
-      );
-    }
-
-    // 2) ***** CREATE PRODUCT *****
-    const product = await Product.create({
+    // -------------------------------
+    // 1) Validate Required Fields
+    // -------------------------------
+    const required = {
       name,
+      modelName,
       shortDescription,
       longDescription,
       suitableFor,
-      score,
+      category,
+      mainImage,
+      brand,
+      sport,
+    };
+
+    for (const key in required) {
+      if (!required[key] || required[key].toString().trim() === "") {
+        return Response.json(
+          { error: `${key} is required` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // -------------------------------
+    // 2) Check Category Exists
+    // -------------------------------
+    const foundCategory = await Category.findById(category);
+    if (!foundCategory) {
+      return Response.json(
+        { error: "Category not found" },
+        { status: 404 }
+      );
+    }
+
+    // -------------------------------
+    // 3) Validate Attributes Based on Category
+    // -------------------------------
+    if (attributes && typeof attributes === "object") {
+      const allowedAttrs = foundCategory.variantAttributes.map(
+        (a) => a.key
+      );
+
+      // بررسی اینکه هیچ attribute اضافی ارسال نشده
+      for (const key of Object.keys(attributes)) {
+        if (!allowedAttrs.includes(key)) {
+          return Response.json(
+            { error: `Attribute "${key}" is not allowed for this category` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    // -------------------------------
+    // 4) Create Product
+    // -------------------------------
+    const created = await Product.create({
+      name,
+      modelName,
+      shortDescription,
+      longDescription,
+      suitableFor,
       basePrice,
       category,
       tag,
@@ -58,42 +96,24 @@ export async function POST(req) {
       brand,
       athlete,
       sport,
-      modelName,
-      variants: [] // initially empty
+      attributes,
     });
 
-    // 3) ***** CREATE VARIANTS (if provided) *****
-    let variantDocs = [];
-
-    if (variants && variants.length > 0) {
-      variantDocs = await Promise.all(
-        variants.map(async (v) => {
-          if (!v.sku) throw new Error("Each variant must have a SKU");
-          return await Variant.create({
-            ...v,
-            productId: product._id,
-          });
-        })
-      );
-
-      // add variant IDs to product
-      product.variants = variantDocs.map(v => v._id);
-      await product.save();
-    }
-
-    // 4) ***** RESPONSE *****
     return Response.json(
       {
         message: "Product created successfully",
-        product,
-        variants: variantDocs
+        product: created,
       },
       { status: 201 }
     );
 
   } catch (err) {
+    console.error(err);
     return Response.json(
-      { error: "مشکلی پیش آمد.", detail: err.message },
+      {
+        error: "مشکلی پیش آمد.",
+        detail: err.message,
+      },
       { status: 500 }
     );
   }
