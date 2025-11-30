@@ -1,68 +1,91 @@
 import { NextResponse } from "next/server";
-import connectToDB from "base/configs/db";
-import Variant from "base/models/Variant";
+import connectDB from "base/utils/connectDB";
 import Product from "base/models/Product";
+import Variant from "base/models/Variant";
 import Category from "base/models/Category";
 
 export async function POST(req, { params }) {
-  await connectToDB();
+  await connectDB();
 
   try {
-    const { id: productId } = params;
+    const { productId } = params;
     const body = await req.json();
 
-    const { sku, price, stock = 0, attributes, images = [] } = body;
+    const { sku, price, stock = 0, images = [], attributes } = body;
 
     if (!sku || !price || !attributes) {
       return NextResponse.json(
-        { error: "sku, price, and attributes are required" },
+        { error: "sku, price و attributes الزامی هستند" },
         { status: 400 }
       );
     }
 
-    // -------------------------------------
-    // 1) Find product
-    // -------------------------------------
-    const product = await Product.findById(productId).populate("category");
+    // ----------------------------------------------------------------------
+    // 1) پیدا کردن محصول
+    // ----------------------------------------------------------------------
+    const product = await Product.findById(productId).lean();
     if (!product) {
       return NextResponse.json(
-        { error: "Product not found" },
+        { error: "محصول پیدا نشد" },
         { status: 404 }
       );
     }
 
-    // -------------------------------------
-    // 2) Find the category
-    // -------------------------------------
-    const category = await Category.findById(product.category);
+    // ----------------------------------------------------------------------
+    // 2) پیدا کردن کتگوری محصول
+    // ----------------------------------------------------------------------
+    const category = await Category.findById(product.category).lean();
     if (!category) {
       return NextResponse.json(
-        { error: "Category not found" },
+        { error: "کتگوری محصول یافت نشد" },
         { status: 404 }
       );
     }
 
-    // -------------------------------------
-    // 3) Create Variant using your MODEL RULES
-    // -------------------------------------
+    // ----------------------------------------------------------------------
+    // 3) ولیدیشن داینامیک attributes طبق Category.attributes
+    // ----------------------------------------------------------------------
+    const requiredAttrs = category.attributes
+      .filter((a) => a.required)
+      .map((a) => a.name);
+
+    const providedAttrs = Object.keys(attributes);
+
+    const missing = requiredAttrs.filter((key) => !providedAttrs.includes(key));
+
+    if (missing.length > 0) {
+      return NextResponse.json(
+        {
+          error: "attributes ناقص است",
+          missing,
+        },
+        { status: 400 }
+      );
+    }
+
+    // ----------------------------------------------------------------------
+    // 4) ساخت واریانت
+    // ----------------------------------------------------------------------
     const variant = await Variant.create({
       productId,
-      categoryId: category._id,   // REQUIRED in your model
+      categoryId: category._id,
       sku,
       price,
       stock,
-      attributes,  // Map<String, String>
-      images
+      images,
+      attributes, // مهم: به صورت Map ذخیره می‌شود
     });
 
     return NextResponse.json(
-      { message: "Variant created", variant },
+      {
+        message: "واریانت با موفقیت ایجاد شد",
+        variant,
+      },
       { status: 201 }
     );
-
   } catch (err) {
     return NextResponse.json(
-      { error: "Server error", detail: err.message },
+      { error: "مشکل سمت سرور", detail: err.message },
       { status: 500 }
     );
   }
