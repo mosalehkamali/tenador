@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import connectDB from "base/utils/connectDB";
+import connectToDB from "base/configs/db";
 import Product from "base/models/Product";
 import Variant from "base/models/Variant";
 import Category from "base/models/Category";
 
 export async function POST(req, { params }) {
-  await connectDB();
+  await connectToDB();
 
   try {
-    const { productId } = params;
+    const { productId } = await params;
     const body = await req.json();
 
     const { sku, price, stock = 0, images = [], attributes } = body;

@@ -25,8 +25,13 @@ const schema = new mongoose.Schema(
     },
 
     logo: {
-      type: String, 
+      type: String,
       default: "",
+    },
+    
+    models: {
+      type: [String],
+      default: [],
     },
 
     slug: {
@@ -43,6 +48,5 @@ schema.pre("save", function () {
     this.slug = this.name.toLowerCase().replace(/\s+/g, "-");
   }
 });
-
 
 export default mongoose.models.Brand || mongoose.model("Brand", schema);
