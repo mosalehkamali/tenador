@@ -5,6 +5,7 @@ import Brand from "base/models/Brand";
 import Sport from "base/models/Sport";
 import Athlete from "base/models/Athlete";
 import Product from "base/models/Product";
+import Category from "base/models/Category";
 
 export async function POST(req) {
   await connectToDB();
@@ -16,10 +17,11 @@ export async function POST(req) {
     brand: null,
     sport: null,
     athlete: null,
+    category: null,
     product: null,
   };
 
-  // ----------- 1) پردازش Query Params  -----------
+  // ----------- 1) پردازش Query Params -----------
   const { searchParams } = new URL(req.url);
 
   if (searchParams.get("brand")) {
@@ -34,11 +36,15 @@ export async function POST(req) {
     search.athlete = await Athlete.findOne({ slug: searchParams.get("athlete") }).lean();
   }
 
+  if (searchParams.get("category")) {
+    search.category = await Category.findOne({ slug: searchParams.get("category") }).lean();
+  }
+
   if (searchParams.get("product")) {
     search.product = await Product.findOne({ slug: searchParams.get("product") }).lean();
   }
 
-  // ----------- 2) پردازش Slugs (هوشمند) -----------
+  // ----------- 2) پردازش Slugs هوشمند -----------
   for (const slug of slugArray) {
     if (!search.brand) {
       const doc = await Brand.findOne({ slug }).lean();
@@ -64,6 +70,14 @@ export async function POST(req) {
       }
     }
 
+    if (!search.category) {
+      const doc = await Category.findOne({ slug }).lean();
+      if (doc) {
+        search.category = doc;
+        continue;
+      }
+    }
+
     if (!search.product) {
       const doc = await Product.findOne({ slug }).lean();
       if (doc) {
@@ -73,16 +87,17 @@ export async function POST(req) {
     }
   }
 
-  // ----------- 3) ساخت کوئری نهایی محصولات -----------
+  // ----------- 3) ساخت فیلتر نهایی -----------
   const finalFilter = {};
 
   if (search.brand) finalFilter.brand = search.brand._id;
   if (search.sport) finalFilter.sport = search.sport._id;
   if (search.athlete) finalFilter.athlete = search.athlete._id;
+  if (search.category) finalFilter.category = search.category._id;
   if (search.product) finalFilter._id = search.product._id;
 
   const products = await Product.find(finalFilter)
-    .populate("brand sport athlete")
+    .populate("brand sport athlete category")
     .lean();
 
   return NextResponse.json({
@@ -90,9 +105,9 @@ export async function POST(req) {
       brand: search.brand,
       sport: search.sport,
       athlete: search.athlete,
+      category: search.category,
       product: search.product,
     },
     results: products,
   });
 }
-  
