@@ -15,12 +15,13 @@ const schema = new mongoose.Schema(
     },
 
     icon: {
-      type: String, 
+      type: String,
       default: "",
     },
 
     slug: {
       type: String,
+      required: true,
       unique: true,
       trim: true,
     },
@@ -28,10 +29,22 @@ const schema = new mongoose.Schema(
   { timestamps: true }
 );
 
-schema.pre("save", function () {
+// تبدیل name به slug
+schema.pre("validate", async function (next) {
   if (this.isModified("name")) {
-    this.slug = this.name.toLowerCase().replace(/\s+/g, "-");
+    const baseSlug = this.name.toLowerCase().replace(/\s+/g, "-");
+
+    let slug = baseSlug;
+    let counter = 1;
+
+    // تا وقتی slug تکراری بود، شماره اضافه کن
+    while (await mongoose.models.Sport.findOne({ slug })) {
+      slug = `${baseSlug}-${counter++}`;
+    }
+
+    this.slug = slug;
   }
 });
 
-export default mongoose.models.Sport || mongoose.model("Sport", schema);
+export default mongoose.models.Sport ||
+  mongoose.model("Sport", schema);
