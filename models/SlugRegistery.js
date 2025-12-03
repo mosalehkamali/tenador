@@ -5,8 +5,8 @@ const SlugRegistrySchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
+      index: true,
       unique: true,
-      index: true, // مهم‌ترین ایندکس
       trim: true,
       lowercase: true,
     },
@@ -70,13 +70,10 @@ const SlugRegistrySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// جلوگیری از اسلاگ‌های تکراری
-SlugRegistrySchema.index({ slug: 1 }, { unique: true });
 
 // ترکیب‌هایی که جستجو را سریع می‌کنند
 SlugRegistrySchema.index({ type: 1, slug: 1 });
 SlugRegistrySchema.index({ filterField: 1, filterValue: 1 });
-SlugRegistrySchema.index({ parentSlug: 1 });
 
 export default mongoose.models.SlugRegistry ||
   mongoose.model("SlugRegistry", SlugRegistrySchema);

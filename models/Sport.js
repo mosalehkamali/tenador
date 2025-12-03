@@ -21,7 +21,6 @@ const schema = new mongoose.Schema(
 
     slug: {
       type: String,
-      required: true,
       unique: true,
       trim: true,
     },
@@ -31,7 +30,7 @@ const schema = new mongoose.Schema(
 
 // تبدیل name به slug
 schema.pre("save", async function () {
-  if (this.isModified("name")) {
+  if (!this.slug || this.isModified("name")) {
     const baseSlug = createSlug(this.name);
 
     let slug = baseSlug;
