@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import { createSlug } from "base/utils/slugify";
 const schema = new mongoose.Schema(
   {
     name: {
@@ -30,9 +30,9 @@ const schema = new mongoose.Schema(
 );
 
 // تبدیل name به slug
-schema.pre("validate", async function (next) {
+schema.pre("save", async function () {
   if (this.isModified("name")) {
-    const baseSlug = this.name.toLowerCase().replace(/\s+/g, "-");
+    const baseSlug = createSlug(this.name);
 
     let slug = baseSlug;
     let counter = 1;

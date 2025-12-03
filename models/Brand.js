@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import { createSlug } from "base/utils/slugify";
 const schema = new mongoose.Schema(
   {
     name: {
@@ -43,9 +43,15 @@ const schema = new mongoose.Schema(
   { timestamps: true }
 );
 
-schema.pre("save", function () {
+schema.pre("save", async function () {
   if (this.isModified("name")) {
-    this.slug = this.name.toLowerCase().replace(/\s+/g, "-");
+    const baseSlug = createSlug(this.name);
+    let slug = baseSlug;
+    let counter = 1;
+    while (await mongoose.models.Brand.findOne({ slug })) {
+      slug = `${baseSlug}-${counter++}`;
+    }
+    this.slug = slug;
   }
 });
 

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import { createSlug } from "base/utils/slugify";
 const AttributeSchema = new mongoose.Schema(
   {
     name: {
@@ -68,12 +68,15 @@ const CategorySchema = new mongoose.Schema(
 
 
 // ایجاد اسلاگ اتوماتیک
-CategorySchema.pre("save", function () {
+CategorySchema.pre("save", async function () {
   if (this.isModified("title")) {
-    this.slug = this.title
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w\-]/g, "");
+    const baseSlug = createSlug(this.title);
+    let slug = baseSlug;
+    let counter = 1;
+    while (await mongoose.models.Category.findOne({ slug })) {
+      slug = `${baseSlug}-${counter++}`;
+    }
+    this.slug = slug;
   }
 });
 

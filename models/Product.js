@@ -68,7 +68,7 @@ const ProductSchema = new mongoose.Schema(
 // ---------------------
 ProductSchema.pre("save", function () {
   if (this.isModified("name") || this.isModified("modelName")) {
-    this.slug = createSlug(`${this.name}-${this.modelName}`);
+    this.slug = createSlug(this.name);
   }
 });
 
