@@ -1,5 +1,6 @@
 import connectToDB from "base/configs/db";
 import Brand from "base/models/Brand";
+import {registerSlug} from "base/actions/registerSlug";
 
 export async function POST(req) {
     try {
@@ -33,6 +34,16 @@ export async function POST(req) {
       logo,
     });
 
+    await registerSlug({
+      slug: created.slug,
+      type: "brand",
+      model: "Brand",
+      refId: created._id,
+      filterField: "brand",
+      filterValue: created._id,
+      label: created.name,
+      parentSlug: null,
+    });
     return Response.json(
       { message: "Brand created successfully", brand: created },
       { status: 201 }

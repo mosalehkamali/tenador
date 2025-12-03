@@ -1,6 +1,7 @@
 import connectToDB from "base/configs/db";
 import Athlete from "base/models/Athlete";
 import Sport from "base/models/Sport";
+import {registerSlug} from "base/actions/registerSlug";
 
 export async function POST(req) {
   try {
@@ -44,6 +45,16 @@ export async function POST(req) {
       photo,
     });
 
+    await registerSlug({
+      slug: created.slug,
+      type: "athlete",
+      model: "Athlete",
+      refId: created._id,
+      filterField: "athlete",
+      filterValue: created._id,
+      label: created.name,
+      parentSlug: null,
+    });
     return Response.json(
       { message: "Athlete created successfully", athlete: created },
       { status: 201 }

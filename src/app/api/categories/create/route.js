@@ -1,6 +1,7 @@
 import connectToDB from "base/configs/db";
 import Category from "base/models/Category";
-
+import {registerSlug} from "base/actions/registerSlug";
+  
 export async function POST(req) {
   try {
     await connectToDB();
@@ -54,6 +55,16 @@ export async function POST(req) {
       attributes: attributes || [],
     });
 
+    await registerSlug({
+      slug: created.slug,
+      type: "category",
+      model: "Category",
+      refId: created._id,
+      filterField: "category",
+      filterValue: created._id,
+      label: created.title,
+      parentSlug: parent || null,
+    });
     return Response.json(
       {
         message: "کتگوری با موفقیت ایجاد شد",
