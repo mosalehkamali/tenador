@@ -1,69 +1,33 @@
+// workers/precomputeProducer.js
 import connectToDB from "base/configs/db";
 import Product from "base/models/Product";
-import DiscountRule from "base/models/DiscountRule";
-import PriceCache from "base/models/FlashSale";
-import Redis from "base/lib/redis"; // node-redis client
-import { calculateDiscountForProduct } from "base/pricing/precomputeHelpers";
+import { createQueue } from "./bullmq.js";
 
-const BATCH_SIZE = 200; // بسته به حافظه/CPU
-const REDIS_KEY_PREFIX = "pricecache:product:";
+const QUEUE_NAME = process.env.BULLMQ_QUEUE || "precompute:products";
+const BATCH = parseInt(process.env.BATCH_SIZE || "500", 10);
 
-async function workerLoop() {
+async function produce() {
   await connectToDB();
-
+  const queue = createQueue(QUEUE_NAME);
   const total = await Product.countDocuments({});
-  for (let skip = 0; skip < total; skip += BATCH_SIZE) {
+  console.log("Total products:", total);
+
+  for (let skip = 0; skip < total; skip += BATCH) {
     const products = await Product.find({})
       .skip(skip)
-      .limit(BATCH_SIZE)
-      .select("_id basePrice brand category") // کمترین فیلد لازم
+      .limit(BATCH)
+      .select("_id")
       .lean();
-
-    const ops = [];
-    for (const p of products) {
-      // محاسبه تخفیف پایه برای محصول (بدون coupon و بدون cart-specific conditions)
-      const { finalPrice, bestDiscount, ruleIds } = await calculateDiscountForProduct(p);
-
-      // آپدیت Mongo PriceCache
-      ops.push({
-        updateOne: {
-          filter: { productId: p._id },
-          update: {
-            $set: {
-              productId: p._id,
-              basePrice: p.basePrice,
-              bestDiscount,
-              finalPrice,
-              ruleIds,
-              updatedAt: new Date()
-            }
-          },
-          upsert: true
-        }
-      });
-
-      // آپدیت Redis (برای سریع‌ترین reads)
-      const redisKey = `${REDIS_KEY_PREFIX}${p._id}`;
-      const payload = JSON.stringify({ finalPrice, basePrice: p.basePrice, bestDiscount, ruleIds });
-      // set with TTL say 5 minutes
-      await Redis.set(redisKey, payload, "EX", 60 * 5);
-    }
-
-    if (ops.length) {
-      await PriceCache.bulkWrite(ops);
-    }
+    const ids = products.map(p => p._id.toString());
+    // enqueue batch job with ids
+    await queue.add("precompute-batch", { ids }, { removeOnComplete: true, removeOnFail: true });
+    console.log("Enqueued batch:", skip, skip + BATCH);
   }
 
-  console.log("Precompute done at", new Date());
+  process.exit(0);
 }
 
-// run once or in interval
-(async () => {
-  try {
-    await workerLoop();
-    process.exit(0);
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
-})();
+produce().catch(err => {
+  console.error(err);
+  process.exit(1);
+});
