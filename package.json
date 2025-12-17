@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:db": "node scripts/test-db-connection.js",
+    "check:mongodb": "node scripts/check-mongodb.js",
     "worker:prices": "node workers/priceWorker.js",
     "worker:discounts": "node workers/discountWorker.js"
   },
@@ -16,7 +18,9 @@
     "mongoose": "^9.0.0",
     "next": "^16.0.7",
     "react": "^19.2.1",
-    "react-dom": "^19.2.1"
+    "react-dom": "^19.2.1",
+    "react-toastify": "^11.0.5",
+    "sweetalert2": "^11.26.10"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

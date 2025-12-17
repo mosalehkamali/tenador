@@ -2,7 +2,7 @@
 import { Worker } from "bullmq";
 import { redisWorker, redis } from "base/lib/redis";
 import Product from "base/models/Product";
-import { calculateFinalPrice } from "base/services/discount/calculateFinalPrice";
+import { calculateFinalPrice } from "base/services/priceCalculator";
 
 const worker = new Worker(
   "priceQueue",

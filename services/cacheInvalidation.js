@@ -1,5 +1,5 @@
 // services/cacheInvalidation.js
-import redis from "base/lib/redis";
+import { redis } from "base/lib/redis";
 
 export async function invalidateProductCaches(productIds = []) {
   if (!productIds.length) return;

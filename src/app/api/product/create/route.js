@@ -64,8 +64,8 @@ export async function POST(req) {
     // 3) Validate Attributes Based on Category
     // -------------------------------
     if (attributes && typeof attributes === "object") {
-      const allowedAttrs = foundCategory.variantAttributes.map(
-        (a) => a.key
+      const allowedAttrs = foundCategory.attributes.map(
+        (a) => a.name
       );
 
       // بررسی اینکه هیچ attribute اضافی ارسال نشده
@@ -88,15 +88,15 @@ export async function POST(req) {
       shortDescription,
       longDescription,
       suitableFor,
-      basePrice,
+      basePrice: parseFloat(basePrice) || 0,
       category,
-      tag,
+      tag: Array.isArray(tag) ? tag : (tag ? tag.split(',').map(t => t.trim()) : []),
       mainImage,
-      gallery,
+      gallery: Array.isArray(gallery) ? gallery : [],
       brand,
-      athlete,
+      athlete: athlete || null,
       sport,
-      attributes,
+      attributes: attributes || {},
     });
 
     return Response.json(

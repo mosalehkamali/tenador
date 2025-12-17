@@ -4,7 +4,7 @@ import { createWorker } from "./bullmq.js";
 import PriceCache from "base/models/PriceCache";
 import Product from "base/models/Product";
 import { computeBaseDiscountForProduct } from "base/services/discountEngine";
-import redis from "base/lib/redis";
+import { redis } from "base/lib/redis";
 
 const QUEUE_NAME = process.env.BULLMQ_QUEUE || "precompute:products";
 const REDIS_PREFIX = "pricecache:product:";

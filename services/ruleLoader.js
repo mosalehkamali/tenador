@@ -1,6 +1,7 @@
 // services/ruleLoader.js
+import mongoose from "mongoose";
 import DiscountRule from "base/models/DiscountRule";
-import redis from "base/lib/redis";
+import { redis } from "base/lib/redis";
 
 const RULE_TTL = parseInt(process.env.PRICE_CACHE_TTL || "300", 10);
 
@@ -10,12 +11,24 @@ export async function loadRulesForProduct(product) {
   if (cached) return JSON.parse(cached);
 
   const now = new Date();
+  // تبدیل به ObjectId برای اطمینان از تطابق
+  const productId = product._id ? (product._id.toString ? product._id : new mongoose.Types.ObjectId(product._id)) : null;
+  const brandId = product.brand ? (product.brand.toString ? product.brand : new mongoose.Types.ObjectId(product.brand)) : null;
+  const categoryId = product.category ? (product.category.toString ? product.category : new mongoose.Types.ObjectId(product.category)) : null;
+  
   const queries = [
-    { type: "global" },
-    { type: "product", targets: product._id },
-    { type: "brand", targets: product.brand },
-    { type: "category", targets: product.category }
+    { type: "global" }
   ];
+  
+  if (productId) {
+    queries.push({ type: "product", targets: { $in: [productId] } });
+  }
+  if (brandId) {
+    queries.push({ type: "brand", targets: { $in: [brandId] } });
+  }
+  if (categoryId) {
+    queries.push({ type: "category", targets: { $in: [categoryId] } });
+  }
 
   const rules = await DiscountRule.find({
     $and: [
