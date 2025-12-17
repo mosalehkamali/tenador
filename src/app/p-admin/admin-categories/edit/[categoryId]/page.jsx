@@ -136,16 +136,16 @@ export default function EditCategory() {
 
   if (loading) {
     return (
-      <AdminLayout title="ویرایش دسته‌بندی">
+      <div title="ویرایش دسته‌بندی">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   return (
-    <AdminLayout title="ویرایش دسته‌بندی">
+    <div title="ویرایش دسته‌بندی">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -274,7 +274,7 @@ export default function EditCategory() {
           </form>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
 

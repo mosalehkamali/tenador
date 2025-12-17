@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/Layout';
-import Link from 'next/link';
+import { StatCard } from '@/components/admin';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -96,25 +95,16 @@ export default function AdminDashboard() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {statCards.map((card) => (
-              <Link
+              <StatCard
                 key={card.href}
+                title={card.title}
+                count={card.count}
+                icon={card.icon}
+                color={card.color}
                 href={card.href}
-                className="block"
-              >
-                <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-200 p-6 border border-gray-200 hover:border-gray-300">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-600 text-sm mb-1">{card.title}</p>
-                      <p className="text-3xl font-bold text-gray-900">{card.count}</p>
-                    </div>
-                    <div className={`${card.color} w-16 h-16 rounded-lg flex items-center justify-center text-3xl`}>
-                      {card.icon}
-                    </div>
-                  </div>
-                </div>
-              </Link>
+              />
             ))}
           </div>
         </div>
