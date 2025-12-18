@@ -8,7 +8,7 @@ import { confirmDelete, showError } from '@/lib/swal';
 
 export default function CategoryProductsClient({ categoryId }) {
   const router = useRouter();
-  console.log("catId",categoryId);
+  
   const [category, setCategory] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
