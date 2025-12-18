@@ -20,7 +20,7 @@ const ProductSchema = new mongoose.Schema(
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: true,  // مهم‌ترین آپدیت
+      required: true,
     },
 
     tag: [String],
@@ -47,12 +47,10 @@ const ProductSchema = new mongoose.Schema(
       required: true,
     },
 
-    // از این به بعد مهم‌ترین قسمت
     attributes: {
       type: Object,
       default: {},
-      // مثل: { size: "XL", color: "Red" }
-      // این با Category هماهنگ می‌شه
+
     },
 
     slug: { type: String, unique: true },
