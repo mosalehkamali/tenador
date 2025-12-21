@@ -1,11 +1,11 @@
-import AddProductToCategory from '@/components/admin/AddProductToCategory';
+import ProductCreateFlow from "@/components/admin/ProductCreateFlow";
 
 export default async function Page({ params }) {
-  const { categoryId } = await params;
+  const { categoryId } =await params;
 
   return (
-    <div className='flex justify-center'>
-      <AddProductToCategory categoryId={categoryId} />
+    <div className="flex justify-center">
+      <ProductCreateFlow categoryId={categoryId} />
     </div>
   );
 }

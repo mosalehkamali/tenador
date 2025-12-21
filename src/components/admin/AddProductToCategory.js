@@ -1,19 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
-export default function AddProductToCategory({ categoryId }) {
+/**
+ * Step 1: Generate AI prompt
+ * Step 2: Paste AI JSON result
+ * Step 3: Validate and pass to parent
+ */
+export default function AIProductDraftStep({ categoryId, onConfirm }) {
+  const [step, setStep] = useState("RAW"); // RAW | PROMPT | RESULT
   const [rawContent, setRawContent] = useState("");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiResult, setAiResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState(null);
 
-  async function handleGenerate() {
+  async function handleGeneratePrompt() {
     setError("");
-    setResult(null);
 
     if (!rawContent || rawContent.trim().length < 50) {
-      setError("متن محصول خیلی کوتاهه.");
+      setError("متن محصول خیلی کوتاهه. حداقل یه توضیح درست بده.");
       return;
     }
 
@@ -22,22 +30,19 @@ export default function AddProductToCategory({ categoryId }) {
     try {
       const res = await fetch("/api/ai/product-draft", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          categoryId,
-          rawContent,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoryId, rawContent }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "خطا در پردازش اطلاعات");
+        throw new Error(data.error || "خطا در ساخت پرامپت");
       }
 
-      setResult(data);
+      setAiPrompt(data.draft);
+      setStep("PROMPT");
+      toast.success("پرامپت ساخته شد");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -45,51 +50,109 @@ export default function AddProductToCategory({ categoryId }) {
     }
   }
 
+  function handleCopyPrompt() {
+    navigator.clipboard.writeText(aiPrompt);
+    toast.info("پرامپت کپی شد");
+  }
+
+  function handleValidateAndConfirm() {
+    try {
+      const parsed = JSON.parse(aiResult);
+
+      Swal.fire({
+        icon: "success",
+        title: "JSON معتبره",
+        text: "اطلاعات به فرم ساخت محصول ارسال شد",
+      });
+
+      // تحویل داده به والد
+      onConfirm(parsed);
+    } catch {
+      Swal.fire({
+        icon: "error",
+        title: "JSON نامعتبر",
+        text: "پاسخ AI فرمت JSON درست نداره",
+      });
+    }
+  }
+
   return (
-    <div className="w-full max-w-3xl bg-white rounded-xl shadow p-6 space-y-5">
+    <div className="w-full max-w-4xl bg-white rounded-xl shadow p-6 space-y-6">
+
       <h2 className="text-xl font-bold text-gray-800">
-        تولید خودکار محصول با هوش مصنوعی
+        تولید محصول با هوش مصنوعی
       </h2>
 
-      {/* Raw Content */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          متن محصول (از سایت مرجع کپی کن)
-        </label>
-        <textarea
-          value={rawContent}
-          onChange={(e) => setRawContent(e.target.value)}
-          rows={8}
-          placeholder="توضیحات کامل محصول رو اینجا پیست کن..."
-          className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-black"
-        />
-      </div>
+      {/* RAW INPUT */}
+      {step === "RAW" && (
+        <>
+          <textarea
+            value={rawContent}
+            onChange={(e) => setRawContent(e.target.value)}
+            rows={7}
+            className="w-full rounded-lg border p-3 text-sm focus:ring-2 focus:ring-black"
+            placeholder="توضیحات کامل محصول رو اینجا پیست کن..."
+          />
 
-      {/* Error */}
-      {error && (
-        <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-          {error}
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleGeneratePrompt}
+            disabled={loading}
+            className="w-full rounded-lg bg-black text-white py-3 text-sm font-semibold"
+          >
+            {loading ? "در حال ساخت پرامپت..." : "ساخت پرامپت"}
+          </button>
+        </>
+      )}
+
+      {/* PROMPT */}
+      {step === "PROMPT" && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-semibold">پرامپت AI</span>
+            <button
+              onClick={handleCopyPrompt}
+              className="text-xs px-3 py-1 rounded bg-gray-200"
+            >
+              کپی
+            </button>
+          </div>
+
+          <pre className="text-xs bg-gray-50 border rounded p-4 max-h-64 overflow-auto">
+            {aiPrompt}
+          </pre>
+
+          <button
+            onClick={() => setStep("RESULT")}
+            className="w-full rounded-lg bg-blue-600 text-white py-2 text-sm font-semibold"
+          >
+            پاسخ AI رو دارم
+          </button>
         </div>
       )}
 
-      {/* Action */}
-      <button
-        onClick={handleGenerate}
-        disabled={loading}
-        className="w-full rounded-lg bg-black text-white py-3 text-sm font-semibold hover:bg-gray-900 disabled:opacity-60"
-      >
-        {loading ? "در حال تحلیل و ساخت محصول..." : "ساخت محصول با AI"}
-      </button>
+      {/* RESULT */}
+      {step === "RESULT" && (
+        <div className="space-y-3">
+          <textarea
+            value={aiResult}
+            onChange={(e) => setAiResult(e.target.value)}
+            rows={8}
+            className="w-full rounded-lg border p-3 text-sm"
+            placeholder="JSON خروجی ChatGPT رو اینجا پیست کن..."
+          />
 
-      {/* Result Preview */}
-      {result && (
-        <div className="bg-gray-50 border rounded-lg p-4 space-y-2">
-          <p className="text-sm font-semibold text-gray-700">
-            خروجی اولیه (قابل ویرایش در مرحله بعد):
-          </p>
-          <pre className="text-xs overflow-x-auto bg-white p-3 rounded border">
-            {JSON.stringify(result, null, 2)}
-          </pre>
+          <button
+            onClick={handleValidateAndConfirm}
+            className="w-full rounded-lg bg-green-600 text-white py-2 text-sm font-semibold"
+          >
+            تایید و رفتن به ساخت محصول
+          </button>
         </div>
       )}
     </div>

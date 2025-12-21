@@ -25,6 +25,13 @@ const ProductSchema = new mongoose.Schema(
 
     tag: [String],
 
+    sku: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+
     mainImage: { type: String, required: true },
 
     gallery: [String],
