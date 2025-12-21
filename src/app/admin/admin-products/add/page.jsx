@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminLayout from '@/components/admin/Layout';
 import Button from '@/components/admin/Button';
 import Input from '@/components/admin/Input';
 import Textarea from '@/components/admin/Textarea';
@@ -121,7 +120,7 @@ export default function AddProduct() {
   const categoryAttributes = selectedCategory?.attributes || [];
 
   return (
-    <AdminLayout title="افزودن محصول جدید">
+    <div title="افزودن محصول جدید">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-lg shadow p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -310,7 +309,7 @@ export default function AddProduct() {
           </form>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
 

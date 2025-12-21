@@ -1,6 +1,46 @@
 import connectToDB from "base/configs/db";
 import Product from "base/models/Product";
 import Category from "base/models/Category";
+import { createSlug } from "base/utils/slugify";
+
+/**
+ * Generate unique SKU
+ */
+async function generateUniqueSKU(name) {
+  const base = createSlug(name);
+  let sku;
+  let exists = true;
+
+  while (exists) {
+    const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+    sku = `${base}-${rand}`;
+    exists = await Product.exists({ sku });
+  }
+
+  return sku;
+}
+
+/**
+ * Normalize image names based on SKU
+ */
+function normalizeImages({ sku, mainImage, gallery }) {
+  let main = mainImage;
+  let images = [];
+
+  if (mainImage) {
+    const ext = mainImage.split(".").pop();
+    main = `${sku}-main.${ext}`;
+  }
+
+  if (Array.isArray(gallery)) {
+    images = gallery.map((img, index) => {
+      const ext = img.split(".").pop();
+      return `${sku}-gallery-${index + 1}.${ext}`;
+    });
+  }
+
+  return { mainImage: main, gallery: images };
+}
 
 export async function POST(req) {
   try {
@@ -15,20 +55,20 @@ export async function POST(req) {
       longDescription,
       suitableFor,
       basePrice,
-      category, // ObjectId از سمت کاربر
+      category,
       tag,
       mainImage,
       gallery,
       brand,
       athlete,
       sport,
-      attributes, // object {}
+      attributes,
     } = body;
 
     // -------------------------------
     // 1) Validate Required Fields
     // -------------------------------
-    const required = {
+    const requiredFields = {
       name,
       modelName,
       shortDescription,
@@ -40,8 +80,8 @@ export async function POST(req) {
       sport,
     };
 
-    for (const key in required) {
-      if (!required[key] || required[key].toString().trim() === "") {
+    for (const key in requiredFields) {
+      if (!requiredFields[key] || requiredFields[key].toString().trim() === "") {
         return Response.json(
           { error: `${key} is required` },
           { status: 400 }
@@ -50,7 +90,7 @@ export async function POST(req) {
     }
 
     // -------------------------------
-    // 2) Check Category Exists
+    // 2) Validate Category
     // -------------------------------
     const foundCategory = await Category.findById(category);
     if (!foundCategory) {
@@ -61,14 +101,11 @@ export async function POST(req) {
     }
 
     // -------------------------------
-    // 3) Validate Attributes Based on Category
+    // 3) Validate Attributes
     // -------------------------------
-    if (attributes && typeof attributes === "object") {
-      const allowedAttrs = foundCategory.attributes.map(
-        (a) => a.name
-      );
+    const allowedAttrs = foundCategory.attributes.map(a => a.name);
 
-      // بررسی اینکه هیچ attribute اضافی ارسال نشده
+    if (attributes && typeof attributes === "object") {
       for (const key of Object.keys(attributes)) {
         if (!allowedAttrs.includes(key)) {
           return Response.json(
@@ -77,22 +114,51 @@ export async function POST(req) {
           );
         }
       }
+
+      // Required attributes check
+      for (const attr of foundCategory.attributes) {
+        if (attr.required && attributes[attr.name] == null) {
+          return Response.json(
+            { error: `Attribute "${attr.name}" is required` },
+            { status: 400 }
+          );
+        }
+      }
     }
 
     // -------------------------------
-    // 4) Create Product
+    // 4) Generate SKU
     // -------------------------------
-    const created = await Product.create({
+    const sku = await generateUniqueSKU(name);
+
+    // -------------------------------
+    // 5) Normalize Images
+    // -------------------------------
+    const images = normalizeImages({
+      sku,
+      mainImage,
+      gallery,
+    });
+
+    // -------------------------------
+    // 6) Create Product
+    // -------------------------------
+    const product = await Product.create({
       name,
       modelName,
       shortDescription,
       longDescription,
       suitableFor,
-      basePrice: parseFloat(basePrice) || 0,
+      sku,
+      basePrice: Number(basePrice) || 0,
       category,
-      tag: Array.isArray(tag) ? tag : (tag ? tag.split(',').map(t => t.trim()) : []),
-      mainImage,
-      gallery: Array.isArray(gallery) ? gallery : [],
+      tag: Array.isArray(tag)
+        ? tag
+        : typeof tag === "string"
+        ? tag.split(",").map(t => t.trim())
+        : [],
+      mainImage: images.mainImage,
+      gallery: images.gallery,
       brand,
       athlete: athlete || null,
       sport,
@@ -102,7 +168,7 @@ export async function POST(req) {
     return Response.json(
       {
         message: "Product created successfully",
-        product: created,
+        product,
       },
       { status: 201 }
     );
@@ -111,7 +177,7 @@ export async function POST(req) {
     console.error(err);
     return Response.json(
       {
-        error: "مشکلی پیش آمد.",
+        error: "Internal server error",
         detail: err.message,
       },
       { status: 500 }
