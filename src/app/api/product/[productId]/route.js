@@ -130,7 +130,7 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     await connectToDB();
-    const resolvedParams = await params();
+    const resolvedParams = await params;
     const productId = resolvedParams.productId || resolvedParams.id;
     
     const product = await Product.findByIdAndDelete(productId);

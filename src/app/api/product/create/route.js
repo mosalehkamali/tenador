@@ -2,6 +2,8 @@ import connectToDB from "base/configs/db";
 import Product from "base/models/Product";
 import Category from "base/models/Category";
 import { createSlug } from "base/utils/slugify";
+import { rename, access } from "fs/promises";
+import { join } from "path";
 
 /**
  * Generate unique SKU
@@ -21,31 +23,36 @@ async function generateUniqueSKU(name) {
 }
 
 /**
- * Normalize image names based on SKU
+ * Rename image file based on SKU
  */
-function normalizeImages({ sku, mainImage, gallery }) {
-  let main = mainImage;
-  let images = [];
+async function renameImageBySKU(imageUrl, sku, index = null) {
+  if (!imageUrl) return null;
 
-  if (mainImage) {
-    const ext = mainImage.split(".").pop();
-    main = `${sku}-main.${ext}`;
+  const parsed = imageUrl.split("/");
+  const fileName = parsed.pop();
+  const folderPath = parsed.join("/");
+
+  const ext = fileName.split(".").pop();
+  const newFileName = index !== null
+    ? `${sku}-${index}.${ext}`
+    : `${sku}.${ext}`;
+
+  const oldPath = join(process.cwd(), "public", folderPath, fileName);
+  const newPath = join(process.cwd(), "public", folderPath, newFileName);
+
+  try {
+    await access(oldPath);
+    await rename(oldPath, newPath);
+  } catch (err) {
+    throw new Error(`Image file not found: ${imageUrl}`);
   }
 
-  if (Array.isArray(gallery)) {
-    images = gallery.map((img, index) => {
-      const ext = img.split(".").pop();
-      return `${sku}-gallery-${index + 1}.${ext}`;
-    });
-  }
-
-  return { mainImage: main, gallery: images };
+  return `${folderPath}/${newFileName}`;
 }
 
 export async function POST(req) {
   try {
     await connectToDB();
-
     const body = await req.json();
 
     const {
@@ -66,7 +73,7 @@ export async function POST(req) {
     } = body;
 
     // -------------------------------
-    // 1) Validate Required Fields
+    // Validate Required Fields
     // -------------------------------
     const requiredFields = {
       name,
@@ -81,7 +88,7 @@ export async function POST(req) {
     };
 
     for (const key in requiredFields) {
-      if (!requiredFields[key] || requiredFields[key].toString().trim() === "") {
+      if (!requiredFields[key]) {
         return Response.json(
           { error: `${key} is required` },
           { status: 400 }
@@ -90,7 +97,7 @@ export async function POST(req) {
     }
 
     // -------------------------------
-    // 2) Validate Category
+    // Validate Category
     // -------------------------------
     const foundCategory = await Category.findById(category);
     if (!foundCategory) {
@@ -101,21 +108,20 @@ export async function POST(req) {
     }
 
     // -------------------------------
-    // 3) Validate Attributes
+    // Validate Attributes
     // -------------------------------
     const allowedAttrs = foundCategory.attributes.map(a => a.name);
 
-    if (attributes && typeof attributes === "object") {
+    if (attributes) {
       for (const key of Object.keys(attributes)) {
         if (!allowedAttrs.includes(key)) {
           return Response.json(
-            { error: `Attribute "${key}" is not allowed for this category` },
+            { error: `Attribute "${key}" is not allowed` },
             { status: 400 }
           );
         }
       }
 
-      // Required attributes check
       for (const attr of foundCategory.attributes) {
         if (attr.required && attributes[attr.name] == null) {
           return Response.json(
@@ -127,21 +133,25 @@ export async function POST(req) {
     }
 
     // -------------------------------
-    // 4) Generate SKU
+    // Generate SKU
     // -------------------------------
     const sku = await generateUniqueSKU(name);
 
     // -------------------------------
-    // 5) Normalize Images
+    // Rename Images Physically
     // -------------------------------
-    const images = normalizeImages({
-      sku,
-      mainImage,
-      gallery,
-    });
+    const normalizedMainImage = await renameImageBySKU(mainImage, sku);
+
+    const normalizedGallery = Array.isArray(gallery)
+      ? await Promise.all(
+          gallery.map((img, i) =>
+            renameImageBySKU(img, sku, i + 1)
+          )
+        )
+      : [];
 
     // -------------------------------
-    // 6) Create Product
+    // Create Product
     // -------------------------------
     const product = await Product.create({
       name,
@@ -157,8 +167,8 @@ export async function POST(req) {
         : typeof tag === "string"
         ? tag.split(",").map(t => t.trim())
         : [],
-      mainImage: images.mainImage,
-      gallery: images.gallery,
+      mainImage: normalizedMainImage,
+      gallery: normalizedGallery,
       brand,
       athlete: athlete || null,
       sport,
