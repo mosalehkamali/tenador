@@ -166,7 +166,7 @@ export default function EditProduct() {
   const categoryAttributes = selectedCategory?.attributes || [];
 
   return (
-    <AdminLayout title="ویرایش محصول">
+    <div title="ویرایش محصول">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-lg shadow p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -350,9 +350,11 @@ export default function EditProduct() {
           </form>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
+
+
 
 
 

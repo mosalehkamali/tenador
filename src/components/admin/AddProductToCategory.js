@@ -37,7 +37,7 @@ export default function AddProductToCategory({ categoryId }) {
         throw new Error(data.error || "خطا در پردازش اطلاعات");
       }
 
-      setResult(data.product);
+      setResult(data);
     } catch (err) {
       setError(err.message);
     } finally {

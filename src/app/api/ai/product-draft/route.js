@@ -46,67 +46,67 @@ export async function POST(req) {
     });
 
     // 4. Call ChatGPT
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4.1-mini", // به اندازه کافی دقیق + اقتصادی
-      temperature: 0.2,      // LOW = دیتای پایدار
-      messages: [
-        {
-          role: "system",
-          content:
-            "You generate structured e-commerce product data. Output JSON only.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    });
+    // const completion = await openai.chat.completions.create({
+    //   model: "gpt-4.1-mini", // به اندازه کافی دقیق + اقتصادی
+    //   temperature: 0.2,      // LOW = دیتای پایدار
+    //   messages: [
+    //     {
+    //       role: "system",
+    //       content:
+    //         "You generate structured e-commerce product data. Output JSON only.",
+    //     },
+    //     {
+    //       role: "user",
+    //       content: prompt,
+    //     },
+    //   ],
+    // });
 
-    const aiMessage = completion.choices[0]?.message?.content;
+    // const aiMessage = completion.choices[0]?.message?.content;
 
-    if (!aiMessage) {
-      return Response.json(
-        { error: "AI returned empty response" },
-        { status: 500 }
-      );
-    }
+    // if (!aiMessage) {
+    //   return Response.json(
+    //     { error: "AI returned empty response" },
+    //     { status: 500 }
+    //   );
+    // }
 
-    // 5. Parse JSON safely
-    let parsed;
-    try {
-      parsed = JSON.parse(aiMessage);
-    } catch (e) {
-      return Response.json(
-        {
-          error: "Invalid JSON returned from AI",
-          raw: aiMessage,
-        },
-        { status: 422 }
-      );
-    }
+    // // 5. Parse JSON safely
+    // let parsed;
+    // try {
+    //   parsed = JSON.parse(aiMessage);
+    // } catch (e) {
+    //   return Response.json(
+    //     {
+    //       error: "Invalid JSON returned from AI",
+    //       raw: aiMessage,
+    //     },
+    //     { status: 422 }
+    //   );
+    // }
 
-    // 6. Final sanity checks (VERY IMPORTANT)
-    if (
-      !parsed.name ||
-      !parsed.brand ||
-      !parsed.sport ||
-      !parsed.category
-    ) {
-      return Response.json(
-        {
-          error: "AI response missing required fields",
-          parsed,
-        },
-        { status: 422 }
-      );
-    }
+    // // 6. Final sanity checks (VERY IMPORTANT)
+    // if (
+    //   !parsed.name ||
+    //   !parsed.brand ||
+    //   !parsed.sport ||
+    //   !parsed.category
+    // ) {
+    //   return Response.json(
+    //     {
+    //       error: "AI response missing required fields",
+    //       parsed,
+    //     },
+    //     { status: 422 }
+    //   );
+    // }
 
     // ⚠️ DO NOT SAVE TO DB HERE
     // This is a DRAFT only
 
     return Response.json(
       {
-        draft: parsed,
+        draft: prompt,
         meta: {
           category: category.title,
           aiModel: "gpt-4.1-mini",
