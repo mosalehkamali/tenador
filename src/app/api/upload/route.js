@@ -1,90 +1,56 @@
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 import { NextResponse } from 'next/server';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(req) {
   try {
     const formData = await req.formData();
     const file = formData.get('file');
-    const folder = formData.get('folder') || 'uploads';
 
     if (!file) {
       return NextResponse.json(
-        { error: 'هیچ فایلی ارسال نشده است' },
+        { error: 'فایلی ارسال نشده' },
         { status: 400 }
       );
     }
 
-    // بررسی نوع فایل
-    const allowedTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/webp',
-      'image/gif',
-      'image/svg+xml',
-      'image/svg',
-    ];
-    
-    // بررسی extension برای SVG (چون ممکن است MIME type متفاوت باشد)
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
-    
-    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+    if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'نوع فایل مجاز نیست. فقط تصاویر (JPG, PNG, WebP, GIF, SVG) مجاز هستند' },
+        { error: 'حجم فایل بیش از حد مجاز است' },
         { status: 400 }
       );
     }
 
-    // بررسی اندازه فایل (حداکثر 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: 'حجم فایل نباید بیشتر از 5 مگابایت باشد' },
-        { status: 400 }
-      );
-    }
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: 'products',
+          resource_type: 'image',
+          allowed_formats: ['jpg', 'png', 'webp'],
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(buffer);
+    });
 
-    // ایجاد نام فایل منحصر به فرد
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 15);
-    const fileName = `${timestamp}-${randomString}.${fileExtension}`;
+    return NextResponse.json({
+      url: result.secure_url,
+      publicId: result.public_id,
+    });
 
-    // مسیر ذخیره‌سازی
-    const uploadDir = join(process.cwd(), 'public', folder);
-    const filePath = join(uploadDir, fileName);
-
-    // ایجاد پوشه در صورت عدم وجود
-    try {
-      await mkdir(uploadDir, { recursive: true });
-    } catch (err) {
-      // پوشه ممکن است از قبل وجود داشته باشد
-    }
-
-    // ذخیره فایل
-    await writeFile(filePath, buffer);
-
-    // URL فایل
-    const fileUrl = `/${folder}/${fileName}`;
-
-    return NextResponse.json(
-      {
-        message: 'فایل با موفقیت آپلود شد',
-        url: fileUrl,
-        fileName: fileName,
-      },
-      { status: 200 }
-    );
   } catch (error) {
-    console.error('خطا در آپلود فایل:', error);
     return NextResponse.json(
-      { error: 'خطا در آپلود فایل', detail: error.message },
+      { error: 'خطا در آپلود تصویر' },
       { status: 500 }
     );
   }
 }
-
