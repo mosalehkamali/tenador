@@ -2,12 +2,20 @@ import connectToDB from "base/configs/db";
 import Product from "base/models/Product";
 import Category from "base/models/Category";
 import { createSlug } from "base/utils/slugify";
-import { rename, access } from "fs/promises";
-import { join } from "path";
+import { v2 as cloudinary } from "cloudinary";
 
-/**
- * Generate unique SKU
- */
+/* ----------------------------------
+   Cloudinary config
+---------------------------------- */
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+/* ----------------------------------
+   Generate unique SKU
+---------------------------------- */
 async function generateUniqueSKU(name) {
   const base = createSlug(name);
   let sku;
@@ -22,34 +30,38 @@ async function generateUniqueSKU(name) {
   return sku;
 }
 
-/**
- * Rename image file based on SKU
- */
-async function renameImageBySKU(imageUrl, sku, index = null) {
-  if (!imageUrl) return null;
-
-  const parsed = imageUrl.split("/");
-  const fileName = parsed.pop();
-  const folderPath = parsed.join("/");
-
-  const ext = fileName.split(".").pop();
-  const newFileName = index !== null
-    ? `${sku}-${index}.${ext}`
-    : `${sku}.${ext}`;
-
-  const oldPath = join(process.cwd(), "public", folderPath, fileName);
-  const newPath = join(process.cwd(), "public", folderPath, newFileName);
-
-  try {
-    await access(oldPath);
-    await rename(oldPath, newPath);
-  } catch (err) {
-    throw new Error(`Image file not found: ${imageUrl}`);
-  }
-
-  return `${folderPath}/${newFileName}`;
+/* ----------------------------------
+   Cloudinary helpers
+---------------------------------- */
+function extractPublicId(url) {
+  const parts = url.split("/upload/")[1];
+  const withoutVersion = parts.replace(/v\d+\//, "");
+  return withoutVersion.replace(/\.[^/.]+$/, "");
 }
 
+async function renameCloudinaryImage(imageUrl, sku, index = null) {
+  if (!imageUrl) return null;
+
+  const oldPublicId = extractPublicId(imageUrl);
+  const folder = oldPublicId.split("/").slice(0, -1).join("/");
+
+  const newPublicId =
+    index !== null
+      ? `${folder}/${sku}-${index}`
+      : `${folder}/${sku}`;
+
+  const result = await cloudinary.uploader.rename(
+    oldPublicId,
+    newPublicId,
+    { overwrite: true }
+  );
+
+  return result.secure_url;
+}
+
+/* ----------------------------------
+   POST: Create Product
+---------------------------------- */
 export async function POST(req) {
   try {
     await connectToDB();
@@ -72,9 +84,9 @@ export async function POST(req) {
       attributes,
     } = body;
 
-    // -------------------------------
-    // Validate Required Fields
-    // -------------------------------
+    /* -------------------------------
+       Validate Required Fields
+    ------------------------------- */
     const requiredFields = {
       name,
       modelName,
@@ -96,9 +108,9 @@ export async function POST(req) {
       }
     }
 
-    // -------------------------------
-    // Validate Category
-    // -------------------------------
+    /* -------------------------------
+       Validate Category
+    ------------------------------- */
     const foundCategory = await Category.findById(category);
     if (!foundCategory) {
       return Response.json(
@@ -107,9 +119,9 @@ export async function POST(req) {
       );
     }
 
-    // -------------------------------
-    // Validate Attributes
-    // -------------------------------
+    /* -------------------------------
+       Validate Attributes
+    ------------------------------- */
     const allowedAttrs = foundCategory.attributes.map(a => a.name);
 
     if (attributes) {
@@ -132,27 +144,28 @@ export async function POST(req) {
       }
     }
 
-    // -------------------------------
-    // Generate SKU
-    // -------------------------------
+    /* -------------------------------
+       Generate SKU
+    ------------------------------- */
     const sku = await generateUniqueSKU(name);
 
-    // -------------------------------
-    // Rename Images Physically
-    // -------------------------------
-    const normalizedMainImage = await renameImageBySKU(mainImage, sku);
+    /* -------------------------------
+       Rename images in Cloudinary
+    ------------------------------- */
+    const normalizedMainImage =
+      await renameCloudinaryImage(mainImage, sku);
 
     const normalizedGallery = Array.isArray(gallery)
       ? await Promise.all(
           gallery.map((img, i) =>
-            renameImageBySKU(img, sku, i + 1)
+            renameCloudinaryImage(img, sku, i + 1)
           )
         )
       : [];
 
-    // -------------------------------
-    // Create Product
-    // -------------------------------
+    /* -------------------------------
+       Create Product
+    ------------------------------- */
     const product = await Product.create({
       name,
       modelName,
