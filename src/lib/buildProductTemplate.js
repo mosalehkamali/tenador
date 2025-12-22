@@ -79,12 +79,12 @@ FIELD RULES (VERY IMPORTANT)
 ===============================
 
 name:
-- Persian product name
+- Can be English or mixed (e.g. "Air Zoom Pegasus 40")
 - Clear, human-readable
 - MUST NOT include brand name unless it is part of the official product name
 
 modelName:
-- Technical or commercial model identifier
+- Technical or commercial model serie identifier
 - Can be English or mixed (e.g. "Air Zoom Pegasus 40")
 
 shortDescription:
