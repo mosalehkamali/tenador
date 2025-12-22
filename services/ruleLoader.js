@@ -1,14 +1,14 @@
 // services/ruleLoader.js
 import mongoose from "mongoose";
 import DiscountRule from "base/models/DiscountRule";
-import { redis } from "base/lib/redis";
+// import redis from "base/lib/redis";
 
 const RULE_TTL = parseInt(process.env.PRICE_CACHE_TTL || "300", 10);
 
 export async function loadRulesForProduct(product) {
   const key = `rules:product:${product._id}`;
-  const cached = await redis.get(key);
-  if (cached) return JSON.parse(cached);
+  // const cached = await redis.get(key);
+  // if (cached) return JSON.parse(cached);
 
   const now = new Date();
   // تبدیل به ObjectId برای اطمینان از تطابق
@@ -39,6 +39,6 @@ export async function loadRulesForProduct(product) {
     ]
   }).sort({ priority: 1 }).lean();
 
-  await redis.set(key, JSON.stringify(rules), "EX", RULE_TTL);
+  // await redis.set(key, JSON.stringify(rules), "EX", RULE_TTL);
   return rules;
 }

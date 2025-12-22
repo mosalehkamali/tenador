@@ -3,7 +3,6 @@ import Category from "base/models/Category";
 import Brand from "base/models/Brand";
 import Sport from "base/models/Sport";
 
-import openai from "@/lib/openai";
 import { buildProductTemplate } from "@/lib/buildProductTemplate";
 
 export async function POST(req) {
