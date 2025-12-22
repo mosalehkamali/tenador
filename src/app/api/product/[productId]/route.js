@@ -13,10 +13,28 @@ cloudinary.config({
 });
 function extractPublicId(url) {
   if (!url) return null;
-  const parts = url.split("/upload/")[1];
-  const withoutVersion = parts.replace(/v\d+\//, "");
-  return withoutVersion.replace(/\.[^/.]+$/, "");
+
+  try {
+    const u = new URL(url);
+    const pathname = u.pathname;
+
+    const uploadIndex = pathname.indexOf("/upload/");
+    if (uploadIndex === -1) return null;
+
+    let publicPath = pathname.slice(uploadIndex + 8); // بعد از /upload/
+
+    // حذف version اگه بود
+    publicPath = publicPath.replace(/^v\d+\//, "");
+
+    // حذف extension
+    publicPath = publicPath.replace(/\.[^/.]+$/, "");
+
+    return publicPath;
+  } catch {
+    return null;
+  }
 }
+
 
 
 const REDIS_PREFIX = "pricecache:product:";
