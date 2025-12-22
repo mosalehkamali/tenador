@@ -3,8 +3,21 @@ import connectToDB from "base/configs/db";
 import Product from "base/models/Product";
 import Category from "base/models/Category";
 import PriceCache from "base/models/PriceCache";
-// import { redis } from "base/lib/redis";
 import { NextResponse } from "next/server";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+function extractPublicId(url) {
+  if (!url) return null;
+  const parts = url.split("/upload/")[1];
+  const withoutVersion = parts.replace(/v\d+\//, "");
+  return withoutVersion.replace(/\.[^/.]+$/, "");
+}
+
 
 const REDIS_PREFIX = "pricecache:product:";
 
@@ -130,10 +143,10 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     await connectToDB();
-    const resolvedParams = await params;
+    const resolvedParams = params;
     const productId = resolvedParams.productId || resolvedParams.id;
-    
-    const product = await Product.findByIdAndDelete(productId);
+
+    const product = await Product.findById(productId).lean();
     if (!product) {
       return NextResponse.json(
         { error: "محصول پیدا نشد" },
@@ -141,13 +154,47 @@ export async function DELETE(req, { params }) {
       );
     }
 
+    /* -------------------------------
+       Collect images public_ids
+    ------------------------------- */
+    const publicIds = [];
+
+    if (product.mainImage) {
+      const pid = extractPublicId(product.mainImage);
+      if (pid) publicIds.push(pid);
+    }
+
+    if (Array.isArray(product.gallery)) {
+      for (const img of product.gallery) {
+        const pid = extractPublicId(img);
+        if (pid) publicIds.push(pid);
+      }
+    }
+
+    /* -------------------------------
+       Delete images from Cloudinary
+    ------------------------------- */
+    if (publicIds.length > 0) {
+      await cloudinary.api.delete_resources(publicIds, {
+        resource_type: "image",
+      });
+    }
+
+    /* -------------------------------
+       Delete product from DB
+    ------------------------------- */
+    await Product.findByIdAndDelete(productId);
+
     return NextResponse.json({
-      message: "محصول با موفقیت حذف شد",
+      message: "محصول و تصاویر آن با موفقیت حذف شدند",
     });
+
   } catch (error) {
+    console.error(error);
     return NextResponse.json(
       { error: error.message },
       { status: 500 }
     );
   }
 }
+
