@@ -65,6 +65,16 @@ GLOBAL RULES (ABSOLUTE)
 - Do NOT hallucinate information
 
 ===============================
+JSON SAFETY RULES (CRITICAL)
+===============================
+- Output MUST be valid JSON
+- All strings MUST have balanced double quotes
+- No trailing commas
+- Validate JSON structure before final output
+- If any syntax error exists, fix it before returning
+- Treat output as production data, not a draft
+
+===============================
 FIELD RULES (VERY IMPORTANT)
 ===============================
 

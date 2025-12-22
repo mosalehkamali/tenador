@@ -312,12 +312,3 @@ export default function AddProduct() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
