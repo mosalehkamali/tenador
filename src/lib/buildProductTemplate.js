@@ -79,9 +79,18 @@ FIELD RULES (VERY IMPORTANT)
 ===============================
 
 name:
-- Can be English or mixed (e.g. "Air Zoom Pegasus 40")
-- Clear, human-readable
-- MUST NOT include brand name unless it is part of the official product name
+- MUST strictly follow this exact pattern:
+  "{Persian product type} {Persian brand name} {Exact model name from raw content}"
+- Persian product type MUST be inferred from category and content (e.g. راکت تنیس)
+- Persian brand name MUST be the Persian transliteration of the brand
+  (e.g. Wilson → ویلسون, Nike → نایکی)
+- Model name MUST be copied EXACTLY from raw content in English
+- Do NOT translate, shorten, reorder, or modify the model name
+- This rule overrides any other naming rule
+Example:
+Raw content: "Wilson Tour Slam Lite Adult Recreational Tennis Racket"
+Correct name output:
+"راکت تنیس ویلسون Tour Slam Lite"
 
 modelName:
 - Technical or commercial model serie identifier
