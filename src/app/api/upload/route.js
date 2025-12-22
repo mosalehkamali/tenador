@@ -33,7 +33,7 @@ export async function POST(req) {
         {
           folder: 'products',
           resource_type: 'image',
-          allowed_formats: ['jpg', 'png', 'webp'],
+          allowed_formats: ['jpg', 'png', 'webp','svg'],
         },
         (error, result) => {
           if (error) reject(error);
