@@ -246,16 +246,3 @@ export default function AddCategory() {
     </AdminLayout>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

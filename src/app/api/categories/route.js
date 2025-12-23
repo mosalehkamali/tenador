@@ -9,16 +9,3 @@ export async function GET(req) {
     categories,
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

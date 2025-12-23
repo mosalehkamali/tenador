@@ -70,16 +70,3 @@ async function checkMongoDB() {
 }
 
 checkMongoDB().catch(console.error);
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -198,16 +198,3 @@ export default function EditSport() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

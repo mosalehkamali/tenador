@@ -167,16 +167,3 @@ export default function AddSport() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

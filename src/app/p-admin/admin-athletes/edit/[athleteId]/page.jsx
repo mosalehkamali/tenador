@@ -272,16 +272,3 @@ export default function EditAthlete() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

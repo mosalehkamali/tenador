@@ -34,16 +34,3 @@ export const showError = (title, text = '') => {
     confirmButtonText: 'باشه',
   });
 };
-
-
-
-
-
-
-
-
-
-
-
-
-

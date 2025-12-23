@@ -236,16 +236,3 @@ export default function EditBrand() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -160,16 +160,3 @@ export default function AdminAthletes() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

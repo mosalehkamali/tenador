@@ -84,16 +84,3 @@ export default function DataTable({
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

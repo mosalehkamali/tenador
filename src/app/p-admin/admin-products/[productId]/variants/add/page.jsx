@@ -232,16 +232,3 @@ export default function AddVariant() {
     </AdminLayout>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

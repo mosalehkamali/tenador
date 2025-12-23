@@ -130,16 +130,3 @@ export default function ProductVariants() {
     </AdminLayout>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -154,16 +154,3 @@ export default function AdminSports() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

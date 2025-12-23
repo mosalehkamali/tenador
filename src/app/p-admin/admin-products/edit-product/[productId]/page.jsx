@@ -565,16 +565,3 @@ export default function EditProduct() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

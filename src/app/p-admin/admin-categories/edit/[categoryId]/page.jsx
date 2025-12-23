@@ -277,16 +277,3 @@ export default function EditCategory() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

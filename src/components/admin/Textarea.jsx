@@ -42,16 +42,3 @@ export default function Textarea({
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

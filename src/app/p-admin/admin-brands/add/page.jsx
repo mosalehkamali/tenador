@@ -205,16 +205,3 @@ export default function AddBrand() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

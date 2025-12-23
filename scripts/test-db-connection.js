@@ -52,16 +52,3 @@ async function testConnection() {
 }
 
 testConnection();
-
-
-
-
-
-
-
-
-
-
-
-
-
