@@ -15,9 +15,11 @@ export default async function ProductsPage() {
   });
 
   if (!res.ok) {
+    const text = await res.text();
+    console.error("API ERROR:", res.status, text);
     throw new Error("خطا در دریافت محصولات");
   }
-
+  
   const data = await res.json();
   const products = Array.isArray(data) ? data : data.products || [];
 
