@@ -2,26 +2,12 @@
 // app/products/page.jsx (Server Component)
 // ===============================
 import ProductListClient from "@/components/templates/products/ProductListClient";
+import { getProducts } from "base/services/product.service";
 
 export default async function ProductsPage() {
   
-  const baseUrl =
-    process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
-
-  const res = await fetch(`${baseUrl}/api/product`, {
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    console.error("API ERROR:", res.status, text);
-    throw new Error("خطا در دریافت محصولات");
-  }
   
-  const data = await res.json();
-  const products = Array.isArray(data) ? data : data.products || [];
+  const products = await getProducts();
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
