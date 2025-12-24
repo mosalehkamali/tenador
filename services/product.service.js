@@ -29,3 +29,23 @@ export async function getProducts() {
   }
 }
 
+export async function getProductBySlug(slug) {
+  try{
+  await connectToDB();
+  const product = await Product.findOne({slug})
+    .populate('brand')
+    .populate('sport')
+    .populate('athlete')
+    .populate('category')
+    .lean();
+  
+  if (!product) {
+    return ({ error: "محصول پیدا نشد" }, { status: 404 });
+  }
+
+
+  return product;
+} catch (err) {
+  return ({ error: err.message }, { status: 500 });
+
+}}
