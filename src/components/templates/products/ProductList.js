@@ -19,6 +19,7 @@ export default function ProductList({
       {products.map((product) => (
         <ProductCard
           key={product._id}
+          slug={product.slug}
           image={product.mainImage}
           name={product.name}
           description={product.shortDescription}

@@ -1,10 +1,12 @@
 import Image from "next/image";
+import Link from "next/link";
 import { FaEye, FaHeart, FaShoppingCart } from "react-icons/fa";
 import { FaRegHeart } from "react-icons/fa";
 
 export default function ProductCard({
   image,
   name,
+  slug,
   description,
   price,
   discountPrice,
@@ -33,20 +35,24 @@ export default function ProductCard({
       )}
 
       {/* Product image */}
+      <Link href={`/products/${slug}`}>
       <div className="relative w-full aspect-square overflow-hidden">
         <Image
           src={image}
           alt={name}
           fill
           className="object-cover"
-        />
+          />
       </div>
+          </Link>
 
       {/* Content */}
       <div className="p-4 flex flex-col gap-2 flex-1">
+      <Link href={`/products/${slug}`}>
         <h3 className="font-bold text-[17px] text-[#1a1a1a] line-clamp-1">
           {name}
         </h3>
+      </Link>
 
         <p className="text-sm text-gray-600 line-clamp-2">
           {description}
