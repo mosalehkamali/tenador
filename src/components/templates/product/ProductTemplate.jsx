@@ -3,7 +3,7 @@ import ProductInfo from "./ProductInfo";
 import ProductTabs from "./ProductTabs";
 
 const ProductTemplate = ({ product }) => {
-  console.log(product);
+  const images = [product.mainImage,...product.gallery]
   
   return (
     <div className="min-h-screen bg-background">
@@ -13,23 +13,23 @@ const ProductTemplate = ({ product }) => {
           {/* Left Column - Gallery (Smaller) */}
           <div className="order-2 lg:order-1">
             <div className="mx-auto max-w-md lg:max-w-none">
-              {/* <ProductGallery images={product.images} /> */}
+              <ProductGallery images={images} />
             </div>
           </div>
 
           {/* Right Column - Product Info */}
           <div className="order-1 lg:order-2">
-            {/* <ProductInfo product={product} /> */}
+            <ProductInfo product={product} />
           </div>
         </div>
 
         {/* Bottom Section - Tabs */}
         <div className="mt-10 sm:mt-12 md:mt-16">
-          {/* <ProductTabs
-            description={product.description}
+          <ProductTabs
+            description={product.longDescription}
             attributes={product.attributes}
-            reviews={product.reviews}
-          /> */}
+            reviews={[]}
+          />
         </div>
       </div>
     </div>

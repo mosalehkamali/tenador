@@ -44,7 +44,7 @@ export async function getProductBySlug(slug) {
   }
 
 
-  return product;
+  return JSON.parse(JSON.stringify(product));
 } catch (err) {
   return ({ error: err.message }, { status: 500 });
 

@@ -1,29 +1,45 @@
-const ProductPrice = ({ originalPrice, discountedPrice, hasDiscount }) => {
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("fa-IR").format(price);
-  };
+const ProductPrice = ({
+  basePrice,
+  discountedPrice,
+  hasDiscount,
+}) => {
+  const formatPrice = (price) =>
+    new Intl.NumberFormat("fa-IR").format(price);
 
-  const discountPercent = hasDiscount
-    ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)
-    : 0;
+  const discountPercent =
+    hasDiscount && basePrice > 0
+      ? Math.round(((basePrice - discountedPrice) / basePrice) * 100)
+      : 0;
 
   return (
     <div className="mb-6 flex items-center gap-4">
       {hasDiscount ? (
         <>
-          <span className="text-2xl font-bold text-foreground">
+          {/* Final Price */}
+          <span className="text-2xl font-bold text-[hsl(var(--foreground))]">
             {formatPrice(discountedPrice)} تومان
           </span>
-          <span className="text-lg text-muted-foreground line-through">
-            {formatPrice(originalPrice)}
+
+          {/* Base Price */}
+          <span className="text-lg line-through opacity-60">
+            {formatPrice(basePrice)}
           </span>
-          <span className="rounded-sm bg-primary/10 px-2 py-1 text-sm font-medium text-primary">
+
+          {/* Discount Badge */}
+          <span
+            className="
+              px-2 py-1 text-sm font-medium
+              border
+              border-[hsl(var(--primary))]
+              text-[hsl(var(--primary))]
+            "
+          >
             {discountPercent}% تخفیف
           </span>
         </>
       ) : (
-        <span className="text-2xl font-bold text-foreground">
-          {formatPrice(originalPrice)} تومان
+        <span className="text-2xl font-bold text-[hsl(var(--primary))]">
+          {formatPrice(basePrice)} تومان
         </span>
       )}
     </div>

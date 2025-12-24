@@ -15,27 +15,28 @@ const ProductInfo = ({ product }) => {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Product Logo */}
-      {product.logo && (
-        <div className="mb-2">
+    <div className="flex flex-col  h-full justify-between">
+      <div className="w-full flex flex-col">
+      {product.brand.logo && (
+        <div className="mb-2 self-end">
           <img 
-            src={product.logo} 
+            src={product.brand.logo} 
             alt={`${product.name} logo`} 
             className="h-12 w-auto object-contain"
-          />
+            />
         </div>
       )}
 
       <ProductHeader
         name={product.name}
-        shortDescription={product.shortDescription}
-      />
+        shortDescription={product.longDescription}
+        />
+        </div>
 
       <ProductPrice
-        originalPrice={product.originalPrice}
+        basePrice={product.basePrice}
         discountedPrice={product.discountedPrice}
-        hasDiscount={product.hasDiscount}
+        hasDiscount={false}
       />
 
       {product.variants && product.variants.length > 0 && (

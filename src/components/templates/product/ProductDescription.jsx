@@ -1,9 +1,16 @@
 const ProductDescription = ({ description }) => {
   return (
-    <div className="animate-fade-in prose prose-neutral max-w-none">
-      <div className="text-foreground leading-relaxed whitespace-pre-line">
-        {description}
-      </div>
+    <div
+      className="
+        animate-[fadeIn_0.25s_ease-out]
+        text-[hsl(var(--foreground))]
+        leading-relaxed
+        whitespace-pre-line
+        text-sm
+        sm:text-base
+      "
+    >
+      {description}
     </div>
   );
 };

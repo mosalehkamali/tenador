@@ -1,20 +1,32 @@
 const ProductAttributesTable = ({ attributes }) => {
+  if (!attributes || typeof attributes !== "object") return null;
+
+  const entries = Object.entries(attributes);
+
   return (
-    <div className="animate-fade-in">
-      <table className="w-full">
+    <div
+      className="
+        overflow-hidden
+        border border-[hsl(var(--border))]
+        animate-[fadeIn_0.25s_ease-out]
+      "
+    >
+      <table className="w-full text-sm">
         <tbody>
-          {attributes.map((attr, index) => (
+          {entries.map(([key, value], index) => (
             <tr
-              key={index}
-              className={`border-b border-border last:border-b-0 ${
-                index % 2 === 0 ? "bg-muted/30" : ""
-              }`}
+              key={key}
+              className={`
+                border-b border-[hsl(var(--border))]
+                last:border-b-0
+                ${index % 2 === 0 ? "bg-black/5" : ""}
+              `}
             >
-              <td className="px-4 py-3 text-sm font-medium text-foreground w-1/3">
-                {attr.key}
+              <td className="w-1/3 px-4 py-3 font-medium text-[hsl(var(--foreground))]">
+                {key}
               </td>
-              <td className="px-4 py-3 text-sm text-muted-foreground">
-                {attr.value}
+              <td className="px-4 py-3 text-[hsl(var(--foreground))] opacity-70">
+                {value}
               </td>
             </tr>
           ))}

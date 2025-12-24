@@ -3,28 +3,43 @@ import { FiHeart } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 
 const WishlistButton = ({ onToggle }) => {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [active, setActive] = useState(false);
 
   const handleClick = () => {
-    const newState = !isWishlisted;
-    setIsWishlisted(newState);
-    onToggle?.(newState);
+    const next = !active;
+    setActive(next);
+    onToggle?.(next);
   };
 
   return (
     <button
       onClick={handleClick}
-      className={`flex items-center justify-center w-11 h-11 rounded border transition-all duration-200 ${
-        isWishlisted
-          ? "bg-primary/10 border-primary text-primary"
-          : "border-border bg-background text-muted-foreground hover:border-primary hover:text-primary"
-      }`}
-      aria-label={isWishlisted ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
+      aria-label={active ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
+      className={`
+        flex items-center justify-center
+        w-11 h-11
+        border
+        transition-all duration-200
+        ${
+          active
+            ? `
+              border-[hsl(var(--primary))]
+              bg-[hsl(var(--primary)/0.12)]
+              text-[hsl(var(--primary))]
+            `
+            : `
+              border-[hsl(var(--border))]
+              text-[hsl(var(--foreground))]
+              hover:border-[hsl(var(--primary))]
+              hover:text-[hsl(var(--primary))]
+            `
+        }
+      `}
     >
-      {isWishlisted ? (
-        <FaHeart className="h-5 w-5 animate-scale-in" />
+      {active ? (
+        <FaHeart className="h-5 w-5 scale-110 transition-transform duration-150" />
       ) : (
-        <FiHeart className="h-5 w-5" />
+        <FiHeart className="h-5 w-5 transition-transform duration-150" />
       )}
     </button>
   );
