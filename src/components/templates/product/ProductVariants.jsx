@@ -12,8 +12,8 @@ const ProductVariants = ({ variants = [] }) => {
 
   return (
     <div className="mb-6 space-y-4">
-      {variants.map((variant) => (
-        <div key={variant.type}>
+      {variants.map((variant,index) => (
+        <div key={index}>
           <label
             className="
               mb-2 block text-sm font-medium
@@ -24,12 +24,12 @@ const ProductVariants = ({ variants = [] }) => {
           </label>
 
           <div className="flex flex-wrap gap-2">
-            {variant.value.map((val) => {
+            {variant.value.map((val,index) => {
               const isActive = selected[variant.type] === val;
 
               return (
                 <button
-                  key={val}
+                  key={index}
                   onClick={() => handleSelect(variant.type, val)}
                   className={`
                     px-3 py-1.5
