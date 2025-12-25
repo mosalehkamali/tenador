@@ -18,10 +18,11 @@ export function buildProductTemplate({ category, brands, sports, rawContent }) {
   label: ${attr.label}
   type: ${attr.type}
   required: ${attr.required ? "YES" : "NO"}`;
-
+      if (attr.prompt) {
+        line += `attribute rule: ${attr.prompt}`;
+      }
       if (attr.type === "select") {
-        line += `
-  allowed values: [${attr.options.join(", ")}]`;
+        line += `allowed values: [${attr.options.join(", ")}]`;
       }
 
       return line;

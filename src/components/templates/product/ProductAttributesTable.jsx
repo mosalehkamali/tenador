@@ -23,7 +23,7 @@ const ProductAttributesTable = ({ attributes }) => {
                   <td className="w-1/3 px-4 py-3 font-medium text-[hsl(var(--foreground))]">
                     {attr.label}
                   </td>
-                  <td className="px-4 py-3 text-[hsl(var(--foreground))] opacity-70">
+                  <td className="px-4 py-3 text-[hsl(var(--foreground))]">
                     {attr.value}
                   </td>
                 </tr>
