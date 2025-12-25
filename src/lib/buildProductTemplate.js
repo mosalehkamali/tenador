@@ -95,10 +95,11 @@ Correct name output:
 modelName:
 - Technical or commercial model serie identifier
 - Can be English or mixed (e.g. "Air Zoom Pegasus 40")
+- mandatory , note that series is not full model , is considered like “T-Fight” and not “T-Fight 300S”
 
 shortDescription:
 - Persian
-- 1–2 concise sentences
+- 3 line concise sentences
 - Marketing-friendly
 - No emojis
 

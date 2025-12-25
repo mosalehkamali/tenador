@@ -1,7 +1,4 @@
 const ProductAttributesTable = ({ attributes }) => {
-  if (!attributes || typeof attributes !== "object") return null;
-
-  const entries = Object.entries(attributes);
 
   return (
     <div
@@ -13,9 +10,9 @@ const ProductAttributesTable = ({ attributes }) => {
     >
       <table className="w-full text-sm">
         <tbody>
-          {entries.map(([key, value], index) => (
+          {attributes.map((attr, index) => (
             <tr
-              key={key}
+              key={index}
               className={`
                 border-b border-[hsl(var(--border))]
                 last:border-b-0
@@ -23,10 +20,10 @@ const ProductAttributesTable = ({ attributes }) => {
               `}
             >
               <td className="w-1/3 px-4 py-3 font-medium text-[hsl(var(--foreground))]">
-                {key}
+                {attr.label}
               </td>
               <td className="px-4 py-3 text-[hsl(var(--foreground))] opacity-70">
-                {value}
+                {attr.value}
               </td>
             </tr>
           ))}

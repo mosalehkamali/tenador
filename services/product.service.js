@@ -30,22 +30,32 @@ export async function getProducts() {
 }
 
 export async function getProductBySlug(slug) {
-  try{
-  await connectToDB();
-  const product = await Product.findOne({slug})
-    .populate('brand')
-    .populate('sport')
-    .populate('athlete')
-    .populate('category')
-    .lean();
-  
-  if (!product) {
-    return ({ error: "محصول پیدا نشد" }, { status: 404 });
+  try {
+    await connectToDB();
+
+    const product = await Product.findOne({ slug })
+      .populate("brand")
+      .populate("sport")
+      .populate("athlete")
+      .populate("category")
+      .lean();
+
+    if (!product) {
+      return { error: "محصول پیدا نشد", status: 404 };
+    }
+
+    // 🔥 MERGE HERE — اینجاست که کارت حرفه‌ای میشه
+    const mergedAttributes = product.category.attributes.map(attr => ({
+      ...attr,
+      value: product.attributes?.[attr.name] ?? null,
+    }));
+
+    return JSON.parse(JSON.stringify({
+      ...product,
+      attributes: mergedAttributes,
+    }));
+
+  } catch (err) {
+    return { error: err.message, status: 500 };
   }
-
-
-  return JSON.parse(JSON.stringify(product));
-} catch (err) {
-  return ({ error: err.message }, { status: 500 });
-
-}}
+}
