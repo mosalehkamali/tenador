@@ -3,12 +3,7 @@
  * Output MUST be a clean JSON object usable directly for Product.create()
  */
 
-export function buildProductTemplate({
-  category,
-  brands,
-  sports,
-  rawContent,
-}) {
+export function buildProductTemplate({ category, brands, sports, rawContent }) {
   if (!category) throw new Error("Category is required");
   if (!rawContent || rawContent.trim().length < 50) {
     throw new Error("Raw product content is too short");
@@ -17,29 +12,31 @@ export function buildProductTemplate({
   // -----------------------------
   // 1. Category attribute rules
   // -----------------------------
-  const attributeInstructions = category.attributes.map(attr => {
-    let line = `- ${attr.name}
+  const attributeInstructions = category.attributes
+    .map((attr) => {
+      let line = `- ${attr.name}
   label: ${attr.label}
   type: ${attr.type}
   required: ${attr.required ? "YES" : "NO"}`;
 
-    if (attr.type === "select") {
-      line += `
+      if (attr.type === "select") {
+        line += `
   allowed values: [${attr.options.join(", ")}]`;
-    }
+      }
 
-    return line;
-  }).join("\n\n");
+      return line;
+    })
+    .join("\n\n");
 
   // -----------------------------
   // 2. Brand & Sport context
   // -----------------------------
-  const brandList = brands.map(b => ({
+  const brandList = brands.map((b) => ({
     id: b._id.toString(),
     name: b.name,
   }));
 
-  const sportList = sports.map(s => ({
+  const sportList = sports.map((s) => ({
     id: s._id.toString(),
     name: s.name,
   }));
@@ -137,10 +134,28 @@ attributes:
 - Respect type strictly:
   - string → string
   - number → number
-  - select → one of allowed values
+  - select → ARRAY of strings (string[])
+- For select attributes:
+  - Output value MUST be an array of strings
+  - Each value MUST be one of allowed values
+  - If raw content explicitly lists multiple values for a select attribute
+  (e.g. "L2L3L4", "L2 / L3 / L4", "Available in L2, L3 and L4"):
+  - Output ALL detected values as an array
+  - Preserve original order if possible
+  - Even single selections MUST be wrapped in an array
 - If value is NOT found in content:
   - If required → infer logically
   - If not required → omit the key
+
+  Example:
+Raw content:
+"Grip sizes: L2L3L4"
+
+Correct attributes output:
+"attributes": {
+  "grip": ["L2", "L3", "L4"]
+}
+
 
 tag:
 - Persian keywords
@@ -192,6 +207,8 @@ REQUIRED OUTPUT JSON STRUCTURE
   "brand": "",
   "sport": "",
   "category": "${category._id}",
+  - attributes values MUST conform exactly to rules above
+  - select attributes MUST always be arrays, never strings
   "attributes": {},
   "tag": [],
   "mainImage": "",

@@ -10,6 +10,26 @@ import ImageUpload from '@/components/admin/ImageUpload';
 import { showToast } from '@/lib/toast';
 import { showError } from '@/lib/swal';
 
+// ---------------------------
+// Helpers
+// ---------------------------
+function normalizeInitialAttributes(attributes = {}, categoryAttributes = []) {
+  const result = {};
+
+  for (const attr of categoryAttributes) {
+    const value = attributes[attr.name];
+
+    if (attr.type === 'select') {
+      // array -> string (for UI)
+      result[attr.name] = Array.isArray(value) ? value.join(', ') : '';
+    } else {
+      result[attr.name] = value ?? '';
+    }
+  }
+
+  return result;
+}
+
 export default function ProductCreateForm({ initialData = {} }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -34,7 +54,7 @@ export default function ProductCreateForm({ initialData = {} }) {
     athlete: '',
     sport: '',
     attributes: {},
-    ...initialData, // 🔥 autofill from AI JSON
+    ...initialData,
   });
 
   // ---------------------------
@@ -75,10 +95,23 @@ export default function ProductCreateForm({ initialData = {} }) {
   }
 
   // ---------------------------
-  // Helpers
+  // Category attributes
   // ---------------------------
   const selectedCategory = categories.find(c => c._id === formData.category);
   const categoryAttributes = selectedCategory?.attributes || [];
+
+  // normalize AI attributes when category loads
+  useEffect(() => {
+    if (!selectedCategory || !initialData.attributes) return;
+
+    setFormData(prev => ({
+      ...prev,
+      attributes: normalizeInitialAttributes(
+        initialData.attributes,
+        selectedCategory.attributes
+      ),
+    }));
+  }, [selectedCategory]);
 
   function updateField(key, value) {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -102,14 +135,29 @@ export default function ProductCreateForm({ initialData = {} }) {
     setLoading(true);
 
     try {
+      const normalizedAttributes = {};
+
+      for (const attr of categoryAttributes) {
+        const rawValue = formData.attributes?.[attr.name];
+        if (!rawValue) continue;
+
+        if (attr.type === 'select') {
+          normalizedAttributes[attr.name] = rawValue
+            .split(',')
+            .map(v => v.trim())
+            .filter(Boolean);
+        } else if (attr.type === 'number') {
+          normalizedAttributes[attr.name] = Number(rawValue);
+        } else {
+          normalizedAttributes[attr.name] = rawValue;
+        }
+      }
+
       const payload = {
         ...formData,
+        attributes: normalizedAttributes,
         basePrice: Number(formData.basePrice) || 0,
-        tag: formData.tag
-          ? Array.isArray(formData.tag)
-            ? formData.tag
-            : formData.tag.split(',').map(t => t.trim())
-          : [],
+        tag: formData.tag || [],
         athlete: formData.athlete || null,
       };
 
@@ -120,11 +168,12 @@ export default function ProductCreateForm({ initialData = {} }) {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error);
 
       showToast.success('محصول ساخته شد');
-      router.push(`/p-admin/admin-categories/category-products/${selectedCategory._id}`);
+      router.push(
+        `/p-admin/admin-categories/category-products/${selectedCategory._id}`
+      );
     } catch (err) {
       showError('خطا', err.message || 'خطا در ایجاد محصول');
     } finally {
@@ -136,98 +185,140 @@ export default function ProductCreateForm({ initialData = {} }) {
   // Render
   // ---------------------------
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-lg shadow">
-
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 bg-white p-8 rounded-lg shadow"
+    >
       <div className="grid md:grid-cols-2 gap-6">
-        <Input label="نام محصول" value={formData.name} onChange={e => updateField('name', e.target.value)} />
-        <Input label="مدل" value={formData.modelName} onChange={e => updateField('modelName', e.target.value)} />
+        <Input
+          label="نام محصول"
+          value={formData.name}
+          onChange={e => updateField('name', e.target.value)}
+        />
+        <Input
+          label="مدل"
+          value={formData.modelName}
+          onChange={e => updateField('modelName', e.target.value)}
+        />
       </div>
 
-      <Textarea label="توضیح کوتاه" rows={3} value={formData.shortDescription} onChange={e => updateField('shortDescription', e.target.value)} />
-      <Textarea label="توضیح کامل" rows={6} value={formData.longDescription} onChange={e => updateField('longDescription', e.target.value)} />
+      <Textarea
+        label="توضیح کوتاه"
+        rows={3}
+        value={formData.shortDescription}
+        onChange={e => updateField('shortDescription', e.target.value)}
+      />
+      <Textarea
+        label="توضیح کامل"
+        rows={6}
+        value={formData.longDescription}
+        onChange={e => updateField('longDescription', e.target.value)}
+      />
 
       <div className="grid md:grid-cols-3 gap-6">
-        <Select label="برند" value={formData.brand} onChange={e => updateField('brand', e.target.value)}
-          options={brands.map(b => ({ value: b._id, label: b.name }))} />
+        <Select
+          label="برند"
+          value={formData.brand}
+          onChange={e => updateField('brand', e.target.value)}
+          options={brands.map(b => ({ value: b._id, label: b.name }))}
+        />
 
-        <Select label="ورزش" value={formData.sport} onChange={e => updateField('sport', e.target.value)}
-          options={sports.map(s => ({ value: s._id, label: s.name }))} />
+        <Select
+          label="ورزش"
+          value={formData.sport}
+          onChange={e => updateField('sport', e.target.value)}
+          options={sports.map(s => ({ value: s._id, label: s.name }))}
+        />
 
-        <Select label="ورزشکار" value={formData.athlete} onChange={e => updateField('athlete', e.target.value)}
-          options={athletes.map(a => ({ value: a._id, label: a.name }))} />
+        <Select
+          label="ورزشکار"
+          value={formData.athlete}
+          onChange={e => updateField('athlete', e.target.value)}
+          options={athletes.map(a => ({ value: a._id, label: a.name }))}
+        />
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <Select label="دسته‌بندی" value={formData.category} onChange={e => updateField('category', e.target.value)}
-          options={categories.map(c => ({ value: c._id, label: c.title }))} />
+        <Select
+          label="دسته‌بندی"
+          value={formData.category}
+          onChange={e => updateField('category', e.target.value)}
+          options={categories.map(c => ({
+            value: c._id,
+            label: c.title,
+          }))}
+        />
 
-        <Input label="قیمت پایه" type="number" value={formData.basePrice} onChange={e => updateField('basePrice', e.target.value)} />
+        <Input
+          label="قیمت پایه"
+          type="number"
+          value={formData.basePrice}
+          onChange={e => updateField('basePrice', e.target.value)}
+        />
       </div>
 
- {/* ATTRIBUTES TABLE */}
-{categoryAttributes.length > 0 && (
-  <div className="border-t pt-6">
-    <h3 className="font-bold mb-4">ویژگی‌ها</h3>
+      {/* ATTRIBUTES */}
+      {categoryAttributes.length > 0 && (
+        <div className="border-t pt-6">
+          <h3 className="font-bold mb-4">ویژگی‌ها</h3>
 
-    <div className="overflow-x-auto">
-      <table className="w-full border border-gray-200 rounded-lg">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="text-right p-3 border-b">ویژگی</th>
-            <th className="text-right p-3 border-b">مقدار</th>
-          </tr>
-        </thead>
+          <table className="w-full border rounded-lg">
+            <tbody>
+              {categoryAttributes.map(attr => (
+                <tr key={attr.name} className="border-b">
+                  <td className="p-3 font-medium bg-gray-50 whitespace-nowrap">
+                    {attr.label}
+                    {attr.required && (
+                      <span className="text-red-500 mr-1">*</span>
+                    )}
+                  </td>
+                  <td className="p-3">
+                    <Input
+                      type={attr.type === 'number' ? 'number' : 'text'}
+                      value={formData.attributes?.[attr.name] || ''}
+                      onChange={e =>
+                        updateAttribute(attr.name, e.target.value)
+                      }
+                      placeholder={
+                        attr.type === 'select'
+                          ? 'مثال: L2, L3, L4'
+                          : `مقدار ${attr.label}`
+                      }
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-        <tbody>
-          {categoryAttributes.map(attr => (
-            <tr key={attr.name} className="border-b last:border-b-0">
-              {/* LABEL */}
-              <td className="px-3 text-gray-700 bg-blue-100 font-medium whitespace-nowrap">
-                {attr.label}
-                {attr.required && (
-                  <span className="text-red-500 mr-1">*</span>
-                )}
-              </td>
+      <Input
+        label="مناسب برای"
+        value={formData.suitableFor}
+        onChange={e => updateField('suitableFor', e.target.value)}
+      />
 
-              {/* VALUE */}
-              <td>
-                {attr.type === 'select' ? (
-                  <Select
-                    value={formData.attributes?.[attr.name] || ''}
-                    onChange={e =>
-                      updateAttribute(attr.name, e.target.value)
-                    }
-                    options={attr.options.map(opt => ({
-                      value: opt,
-                      label: opt,
-                    }))}
-                    placeholder="انتخاب کنید"
-                  />
-                ) : (
-                  <Input
-                        type={attr.type === 'number' ? 'number' : 'text'}
-                    value={formData.attributes?.[attr.name] || ''}
-                    onChange={e =>
-                      updateAttribute(attr.name, e.target.value)
-                    }
-                    placeholder={`مقدار ${attr.label}`}
-                  />
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
+      <Input
+        label="تگ‌ها"
+        value={formData.tag}
+        onChange={e => updateField('tag', e.target.value)}
+      />
 
+      <ImageUpload
+        label="تصویر اصلی"
+        value={formData.mainImage}
+        onChange={v => updateField('mainImage', v)}
+        folder="products"
+      />
 
-      <Input label="مناسب برای" value={formData.suitableFor} onChange={e => updateField('suitableFor', e.target.value)} />
-      <Input label="تگ‌ها" value={formData.tag} onChange={e => updateField('tag', e.target.value)} />
-
-      <ImageUpload label="تصویر اصلی" value={formData.mainImage} onChange={v => updateField('mainImage', v)} folder="products" />
-      <ImageUpload label="گالری" multiple value={formData.gallery} onChange={v => updateField('gallery', v)} folder="products" />
+      <ImageUpload
+        label="گالری"
+        multiple
+        value={formData.gallery}
+        onChange={v => updateField('gallery', v)}
+        folder="products"
+      />
 
       <Button type="submit" loading={loading}>
         ایجاد محصول
