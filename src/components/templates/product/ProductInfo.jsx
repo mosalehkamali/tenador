@@ -6,6 +6,12 @@ import AddToCartButton from "./AddToCartButton";
 import WishlistButton from "./WishlistButton";
 
 const ProductInfo = ({ product }) => {
+
+  const productOptions = product.attributes.filter(
+    attr => attr.type === "select"
+  );
+  
+  
   const handleAddToCart = () => {
     console.log("محصول به سبد خرید اضافه شد:", product.name);
   };
@@ -29,7 +35,7 @@ const ProductInfo = ({ product }) => {
 
       <ProductHeader
         name={product.name}
-        shortDescription={product.longDescription}
+        shortDescription={product.shortDescription}
         />
         </div>
 
@@ -39,9 +45,9 @@ const ProductInfo = ({ product }) => {
         hasDiscount={false}
       />
 
-      {product.variants && product.variants.length > 0 && (
+      {productOptions && productOptions.length > 0 && (
         <div className="mt-2">
-          <ProductVariants variants={product.variants} />
+          <ProductVariants variants={productOptions} />
         </div>
       )}
 

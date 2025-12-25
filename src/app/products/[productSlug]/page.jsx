@@ -1,7 +1,3 @@
-// ===============================
-// app/products/[slug]/page.jsx (Server Component)
-// ===============================
-
 import ProductTemplate from "@/components/templates/product/ProductTemplate";
 import { getProductBySlug } from "base/services/product.service";
 
