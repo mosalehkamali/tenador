@@ -30,6 +30,12 @@ const AttributeSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+
+    prompt: {
+      type: String,
+      required: false, // اختیاری
+      trim: true,
+    },
   },
   { _id: false }
 );
@@ -38,14 +44,29 @@ const AttributeSchema = new mongoose.Schema(
 
 const CategorySchema = new mongoose.Schema(
   {
+
     title: {
       type: String,
       required: true,
       trim: true,
     },
 
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      validate: {
+        validator: function(v) {
+          // بررسی اینکه فقط حروف انگلیسی و اعداد باشد
+          return /^[a-zA-Z0-9\s\-_]+$/.test(v);
+        },
+        message: 'نام باید فقط شامل حروف انگلیسی، اعداد، فاصله، خط تیره و زیرخط باشد'
+      }
+    },
+
     slug: {
       type: String,
+      required: true,
       unique: true,
       trim: true,
     },
@@ -68,17 +89,21 @@ const CategorySchema = new mongoose.Schema(
 
 
 // ایجاد اسلاگ اتوماتیک
-CategorySchema.pre("save", async function () {
-  if (this.isModified("title")) {
-    const baseSlug = createSlug(this.title);
+CategorySchema.pre("validate", async function () {
+  if (!this.slug && this.name) {
+    const baseSlug = createSlug(this.name);
     let slug = baseSlug;
     let counter = 1;
+
     while (await mongoose.models.Category.findOne({ slug })) {
       slug = `${baseSlug}-${counter++}`;
     }
+
     this.slug = slug;
   }
+
 });
+
 
 
 

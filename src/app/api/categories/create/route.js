@@ -1,13 +1,14 @@
 import connectToDB from "base/configs/db";
 import Category from "base/models/Category";
 import {registerSlug} from "base/actions/registerSlug";
+import { createSlug } from "base/utils/slugify";
   
 export async function POST(req) {
   try {
     await connectToDB();
 
     const body = await req.json();
-    const { title, parent, attributes } = body;
+    const { title,name, parent, attributes } = body;
 
     // Title required
     if (!title || title.trim() === "") {
@@ -16,6 +17,22 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
+    // Name required and must be English
+    if (!name || name.trim() === "") {
+      return Response.json(
+        { error: "نام کتگوری الزامی است" },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[a-zA-Z0-9\s\-_]+$/.test(name)) {
+      return Response.json(
+        { error: "نام کتگوری باید فقط شامل حروف انگلیسی، اعداد، فاصله، خط تیره و زیرخط باشد" },
+        { status: 400 }
+      );
+    }
+console.log(createSlug(name));
 
     // Duplicate check
     const exists = await Category.findOne({ title });
@@ -45,12 +62,15 @@ export async function POST(req) {
             { status: 400 }
           );
         }
+
+        // prompt is optional, no validation needed
       }
     }
 
     // Create category
     const created = await Category.create({
       title,
+      name,
       parent: parent || null,
       attributes: attributes || [],
     });

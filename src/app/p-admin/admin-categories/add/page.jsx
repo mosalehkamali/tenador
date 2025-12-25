@@ -15,6 +15,7 @@ export default function AddCategory() {
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
+    name: '',
     parent: '',
     attributes: [],
   });
@@ -24,6 +25,7 @@ export default function AddCategory() {
     type: 'string',
     required: true,
     options: '',
+    prompt: '',
   });
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export default function AddCategory() {
       options: currentAttribute.type === 'select' && currentAttribute.options
         ? currentAttribute.options.split(',').map(opt => opt.trim())
         : [],
+      prompt: currentAttribute.prompt || undefined,
     };
 
     setFormData((prev) => ({
@@ -67,6 +70,7 @@ export default function AddCategory() {
       type: 'string',
       required: true,
       options: '',
+      prompt: '',
     });
   };
 
@@ -84,6 +88,7 @@ export default function AddCategory() {
     try {
       const payload = {
         title: formData.title,
+        name: formData.name,
         parent: formData.parent || null,
         attributes: formData.attributes,
       };
@@ -113,7 +118,7 @@ export default function AddCategory() {
   };
 
   return (
-    <AdminLayout title="افزودن دسته‌بندی جدید">
+    <div title="افزودن دسته‌بندی جدید">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -124,6 +129,17 @@ export default function AddCategory() {
               onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
               required
               placeholder="مثال: کفش ورزشی"
+            />
+
+            <Input
+              label="نام دسته‌بندی (انگلیسی)"
+              name="name"
+              value={formData.name}
+              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+              required
+              placeholder="مثال: sport-shoes"
+              pattern="^[a-zA-Z0-9\s\-_]+$"
+              title="فقط حروف انگلیسی، اعداد، فاصله، خط تیره و زیرخط مجاز است"
             />
 
             <Select
@@ -180,6 +196,14 @@ export default function AddCategory() {
                     </label>
                   </div>
                 </div>
+
+                <Input
+                  label="Prompt (اختیاری)"
+                  name="attrPrompt"
+                  value={currentAttribute.prompt}
+                  onChange={(e) => setCurrentAttribute((prev) => ({ ...prev, prompt: e.target.value }))}
+                  placeholder="مثال: سایز کفش را انتخاب کنید"
+                />
 
                 {currentAttribute.type === 'select' && (
                   <Input
@@ -243,6 +267,6 @@ export default function AddCategory() {
           </form>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
