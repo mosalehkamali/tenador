@@ -47,5 +47,8 @@ OrderSchema.virtual("itemsCount").get(function () {
   return this.items.reduce((sum, i) => sum + i.quantity, 0);
 });
 
+OrderSchema.set("toJSON", { virtuals: true });
+OrderSchema.set("toObject", { virtuals: true });
+
 export default mongoose.models.Order ||
   mongoose.model("Order", OrderSchema);

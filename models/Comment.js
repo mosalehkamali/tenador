@@ -51,5 +51,9 @@ CommentSchema.virtual("replies", {
   foreignField: "parent",
 });
 
+CommentSchema.set("toJSON", { virtuals: true });
+CommentSchema.set("toObject", { virtuals: true });
+
+
 export default mongoose.models.Comment ||
   mongoose.model("Comment", CommentSchema);
