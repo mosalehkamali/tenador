@@ -5,21 +5,42 @@ const UserSchema = new mongoose.Schema(
     // ------------------
     // Auth
     // ------------------
+    provider: {
+      type: String,
+      enum: ["local", "google"],
+      required: true,
+    },
+
     phone: {
       type: String,
-      required: true,
+      required: function() { return this.provider === 'local'; },
       unique: true,
+      sparse: true,
       trim: true,
     },
 
     password: {
       type: String,
-      required: true,
+      required: function() { return this.provider === 'local'; },
+    },
+
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      required: function() { return this.provider === 'google'; },
+    },
+
+    email: {
+      type: String,
+      unique: true,
+      sparse: true,
+      required: function() { return this.provider === 'google'; },
     },
 
     phoneVerified: {
       type: Boolean,
-      default: false,
+      default: function() { return this.provider === 'google'; },
     },
 
     otp: {

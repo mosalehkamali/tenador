@@ -22,7 +22,7 @@ export async function POST(request) {
       return NextResponse.json({ message: 'Password must be at least 8 characters, include uppercase, lowercase, number, and special character' }, { status: 400 });
     }
 
-    // Check if user exists
+    // Check if user exists (prevent duplicate users across providers)
     const existingUser = await User.findOne({ phone });
     if (existingUser) {
       return NextResponse.json({ message: 'User already exists' }, { status: 409 });
@@ -33,6 +33,7 @@ export async function POST(request) {
 
     // Create user
     const newUser = new User({
+      provider: 'local',
       phone,
       password: hashedPassword,
       name: name || '',
@@ -51,14 +52,14 @@ export async function POST(request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 10,
+      maxAge: 5 * 60, // 5 minutes
     });
 
     response.cookies.set('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 15 * 24 * 60 * 60,
+      maxAge: 15 * 24 * 60 * 60, // 15 days
     });
 
     return response;

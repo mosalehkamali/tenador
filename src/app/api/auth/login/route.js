@@ -18,10 +18,10 @@ export async function POST(request) {
       return NextResponse.json({ message: 'Invalid phone number' }, { status: 400 });
     }
 
-    // Find user
-    const user = await User.findOne({ phone });
+    // Find user (only local provider)
+    const user = await User.findOne({ phone, provider: 'local' });
     if (!user) {
-      return NextResponse.json({ message: 'User not found' }, { status: 404 });
+      return NextResponse.json({ message: 'User not found or not a local user' }, { status: 404 });
     }
 
     // Validate password
@@ -41,7 +41,7 @@ export async function POST(request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 10, // 10 seconds
+      maxAge: 5 * 60, // 5 minutes
     });
 
     response.cookies.set('refreshToken', refreshToken, {
