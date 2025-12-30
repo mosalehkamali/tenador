@@ -12,6 +12,11 @@ const UserSchema = new mongoose.Schema(
       trim: true,
     },
 
+    password: {
+      type: String,
+      required: true,
+    },
+
     phoneVerified: {
       type: Boolean,
       default: false,
@@ -33,14 +38,14 @@ const UserSchema = new mongoose.Schema(
     // ------------------
     role: {
       type: String,
-      enum: ["user", "coach", "admin"],
+      enum: ["user", "coach", "admin","seller","national_player"],
       default: "user",
     },
 
     // ------------------
-    // VIP / Level
+    // Level
     // ------------------
-    vipLevel: {
+    level: {
       type: Number,
       default: 0, // 0=normal, 1=silver, 2=gold, 3=platinum
     },
@@ -69,7 +74,7 @@ const UserSchema = new mongoose.Schema(
     // ------------------
     // Favorites
     // ------------------
-    favorites: [
+    wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
@@ -91,6 +96,13 @@ UserSchema.virtual("comments", {
   ref: "Comment",
   localField: "_id",
   foreignField: "user",
+});
+
+//addresses
+UserSchema.virtual("addresses", {
+  ref: "Address",
+  localField: "_id",
+  foreignField: "user"
 });
 
 UserSchema.set("toObject", { virtuals: true });

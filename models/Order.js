@@ -39,6 +39,10 @@ const OrderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    description: {
+      type: String,
+      required: false,
+    },
   },
   { timestamps: true }
 );
@@ -50,5 +54,4 @@ OrderSchema.virtual("itemsCount").get(function () {
 OrderSchema.set("toJSON", { virtuals: true });
 OrderSchema.set("toObject", { virtuals: true });
 
-export default mongoose.models.Order ||
-  mongoose.model("Order", OrderSchema);
+export default mongoose.models.Order || mongoose.model("Order", OrderSchema);
