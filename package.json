@@ -17,6 +17,7 @@
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.65.1",
     "cloudinary": "^2.8.0",
+    "framer-motion": "^12.23.26",
     "google-auth-library": "^10.5.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.0.0",
