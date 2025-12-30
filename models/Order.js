@@ -15,7 +15,7 @@ const OrderSchema = new mongoose.Schema(
           ref: "Product",
           required: true,
         },
-        quantity: { type: Number, default: 1 },
+        quantity: { type: Number, required: true },
         price: { type: Number, required: true },
       },
     ],
@@ -25,24 +25,31 @@ const OrderSchema = new mongoose.Schema(
       required: true,
     },
 
-    status: {
+    paymentMethod: {
       type: String,
-      enum: ["pending", "paid", "sent", "delivered", "canceled"],
-      default: "pending",
+      enum: ["ONLINE", "BANK_RECEIPT", "INSTALLMENT"],
+      required: true,
     },
 
-    paymentRef: {
+    paymentStatus: {
       type: String,
+      enum: ["PENDING", "UNDER_REVIEW", "PAID", "REJECTED"],
+      default: "PENDING",
+    },
+
+    fulfillmentStatus: {
+      type: String,
+      enum: ["WAITING", "PROCESSING", "SENT", "DELIVERED", "CANCELED"],
+      default: "WAITING",
     },
 
     address: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Address",
       required: true,
     },
-    description: {
-      type: String,
-      required: false,
-    },
+
+    description: String,
   },
   { timestamps: true }
 );
