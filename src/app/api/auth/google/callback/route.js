@@ -86,7 +86,7 @@ export async function GET(request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 5 * 60,
+      maxAge: 15 * 24 * 60 * 60,
     });
 
     response.cookies.set('refreshToken', refreshToken, {

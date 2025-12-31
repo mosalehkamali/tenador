@@ -13,7 +13,7 @@ export const passwordValidator = async (password,hashedPassword ) => {
 
 export const tokenGenrator = (data) => {
   const token = sign({ ...data }, process.env.AccessTokenPrivateKey, {
-    expiresIn: "10s",
+    expiresIn: "15d",
     algorithm:"HS256",
   });
   return token;
@@ -52,5 +52,4 @@ export const validatePassword = (password) => {
     /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/g;
   return pattern.test(password);
 };
-
 
