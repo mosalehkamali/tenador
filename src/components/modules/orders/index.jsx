@@ -19,10 +19,8 @@ const OrdersModule = () => {
       if (res.ok) {
         const data = await res.json()
         setOrders(data.orders)
-      } else {
-        toast.error('خطا در بارگذاری سفارش‌ها')
-      }
-    } catch (error) {
+      } else toast.error('خطا در بارگذاری سفارش‌ها')
+    } catch {
       toast.error('خطا در اتصال')
     } finally {
       setLoading(false)
@@ -45,7 +43,7 @@ const OrdersModule = () => {
       case 'pending': return 'در انتظار'
       case 'processing': return 'در حال پردازش'
       case 'shipped': return 'ارسال شده'
-      case 'delivered': return 'تحویل داده شده'
+      case 'delivered': return 'تحویل شده'
       case 'cancelled': return 'لغو شده'
       default: return status
     }
@@ -53,105 +51,138 @@ const OrdersModule = () => {
 
   if (loading) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex justify-center items-center h-64"
-      >
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </motion.div>
+      <div className="flex h-56 items-center justify-center">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-[hsl(var(--primary))] border-t-transparent" />
+      </div>
     )
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
+      transition={{ duration: 0.25 }}
+      className="space-y-5"
     >
-      <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-        <FaShoppingBag />
+      <h1 className="flex items-center gap-2 text-lg font-semibold">
+        <FaShoppingBag className="text-sm opacity-70" />
         سفارش‌های من
       </h1>
 
       {orders.length === 0 ? (
-        <div className="bg-white rounded-sm shadow-sm p-8 text-center">
-          <FaShoppingBag className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-gray-500">هیچ سفارشی ندارید</p>
+        <div className="rounded-[var(--radius)] border border-[hsl(var(--border))] bg-white p-8 text-center">
+          <FaShoppingBag className="mx-auto mb-3 text-3xl opacity-30" />
+          <p className="text-sm text-[hsl(var(--foreground)/0.6)]">
+            هیچ سفارشی ثبت نشده
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (
             <motion.div
               key={order._id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-sm shadow-sm p-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="
+                rounded-[var(--radius)]
+                border border-[hsl(var(--border))]
+                bg-white
+              "
             >
-              <div className="flex items-center justify-between mb-4">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <FaShoppingBag className="text-primary" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius)] bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))]">
+                    <FaShoppingBag className="text-sm" />
+                  </div>
                   <div>
-                    <p className="font-medium">سفارش #{order._id.slice(-8)}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm font-medium">
+                      سفارش #{order._id.slice(-8)}
+                    </p>
+                    <p className="text-xs text-[hsl(var(--foreground)/0.6)]">
                       {new Date(order.createdAt).toLocaleDateString('fa-IR')}
                     </p>
                   </div>
                 </div>
+
                 <div className="text-left">
-                  <p className={`font-bold ${getStatusColor(order.status)}`}>
+                  <p className={`text-sm font-semibold ${getStatusColor(order.status)}`}>
                     {getStatusText(order.status)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs text-[hsl(var(--foreground)/0.6)]">
                     {order.totalAmount?.toLocaleString('fa-IR')} تومان
                   </p>
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Items preview */}
+              <div className="border-t border-[hsl(var(--border))] px-4 py-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {order.items?.slice(0, 3).map((item, index) => (
                     <div key={index} className="flex items-center gap-3">
                       <img
                         src={item.product?.images?.[0] || '/placeholder.jpg'}
                         alt={item.product?.name}
-                        className="w-12 h-12 object-cover rounded-sm"
+                        className="h-11 w-11 rounded-[var(--radius)] object-cover"
                       />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.product?.name}</p>
-                        <p className="text-xs text-gray-500">
-                          {item.quantity} عدد × {item.price?.toLocaleString('fa-IR')} تومان
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">
+                          {item.product?.name}
+                        </p>
+                        <p className="text-xs text-[hsl(var(--foreground)/0.6)]">
+                          {item.quantity} × {item.price?.toLocaleString('fa-IR')} تومان
                         </p>
                       </div>
                     </div>
                   ))}
+
                   {order.items?.length > 3 && (
-                    <div className="flex items-center justify-center text-sm text-gray-500">
+                    <div className="flex items-center justify-center text-xs text-[hsl(var(--foreground)/0.6)]">
                       +{order.items.length - 3} محصول دیگر
                     </div>
                   )}
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <div className="flex gap-2">
-                    <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-sm hover:bg-gray-200 transition-colors">
-                      <FaEye className="inline ml-1" />
-                      جزئیات
+              {/* Footer */}
+              <div className="flex items-center justify-between border-t border-[hsl(var(--border))] px-4 py-3">
+                <div className="flex gap-2">
+                  <button
+                    className="
+                      flex items-center gap-1
+                      rounded-[var(--radius)]
+                      border border-[hsl(var(--border))]
+                      px-3 py-1.5
+                      text-xs
+                      hover:bg-[hsl(var(--background))]
+                    "
+                  >
+                    <FaEye />
+                    جزئیات
+                  </button>
+
+                  {order.status === 'shipped' && (
+                    <button
+                      className="
+                        flex items-center gap-1
+                        rounded-[var(--radius)]
+                        bg-[hsl(var(--primary))]
+                        px-3 py-1.5
+                        text-xs text-white
+                        hover:bg-[hsl(var(--primary)/0.9)]
+                      "
+                    >
+                      <FaTruck />
+                      پیگیری
                     </button>
-                    {order.status === 'shipped' && (
-                      <button className="px-3 py-1 text-sm bg-primary text-white rounded-sm hover:bg-primary/90 transition-colors">
-                        <FaTruck className="inline ml-1" />
-                        پیگیری ارسال
-                      </button>
-                    )}
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm text-gray-500">مجموع</p>
-                    <p className="font-bold text-primary">
-                      {order.totalAmount?.toLocaleString('fa-IR')} تومان
-                    </p>
-                  </div>
+                  )}
+                </div>
+
+                <div className="text-left">
+                  <p className="text-xs text-[hsl(var(--foreground)/0.6)]">مبلغ کل</p>
+                  <p className="text-sm font-semibold text-[hsl(var(--primary))]">
+                    {order.totalAmount?.toLocaleString('fa-IR')} تومان
+                  </p>
                 </div>
               </div>
             </motion.div>

@@ -26,10 +26,8 @@ const TicketsModule = () => {
       if (res.ok) {
         const data = await res.json()
         setTickets(data.tickets)
-      } else {
-        toast.error('خطا در بارگذاری تیکت‌ها')
-      }
-    } catch (error) {
+      } else toast.error('خطا در بارگذاری تیکت‌ها')
+    } catch {
       toast.error('خطا در اتصال')
     } finally {
       setLoading(false)
@@ -50,141 +48,144 @@ const TicketsModule = () => {
         setShowForm(false)
         resetForm()
         toast.success('تیکت ارسال شد')
-      } else {
-        toast.error('خطا در ارسال تیکت')
-      }
-    } catch (error) {
+      } else toast.error('خطا در ارسال تیکت')
+    } catch {
       toast.error('خطا در اتصال')
     }
   }
 
   const resetForm = () => {
-    setFormData({
-      title: '',
-      message: '',
-      priority: 'normal'
-    })
+    setFormData({ title: '', message: '', priority: 'normal' })
   }
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'text-red-600'
-      case 'normal': return 'text-yellow-600'
-      case 'low': return 'text-green-600'
-      default: return 'text-gray-600'
-    }
+  const priorityMeta = {
+    high: { text: 'فوری', color: 'text-red-600' },
+    normal: { text: 'معمولی', color: 'text-yellow-600' },
+    low: { text: 'کم', color: 'text-green-600' },
   }
 
-  const getPriorityText = (priority) => {
-    switch (priority) {
-      case 'high': return 'فوری'
-      case 'normal': return 'معمولی'
-      case 'low': return 'کم'
-      default: return priority
-    }
-  }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'open': return 'text-green-600'
-      case 'pending': return 'text-yellow-600'
-      case 'closed': return 'text-red-600'
-      default: return 'text-gray-600'
-    }
-  }
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'open': return 'باز'
-      case 'pending': return 'در انتظار پاسخ'
-      case 'closed': return 'بسته'
-      default: return status
-    }
+  const statusMeta = {
+    open: { text: 'باز', color: 'text-green-600' },
+    pending: { text: 'در انتظار پاسخ', color: 'text-yellow-600' },
+    closed: { text: 'بسته', color: 'text-red-600' },
   }
 
   if (loading) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex justify-center items-center h-64"
-      >
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </motion.div>
+      <div className="flex h-56 items-center justify-center">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-[hsl(var(--primary))] border-t-transparent" />
+      </div>
     )
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
+      transition={{ duration: 0.25 }}
+      className="space-y-5"
     >
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <FaTicketAlt />
+        <h1 className="flex items-center gap-2 text-lg font-semibold">
+          <FaTicketAlt className="text-sm opacity-70" />
           تیکت‌های پشتیبانی
         </h1>
+
         <button
           onClick={() => {
             setShowForm(!showForm)
             setSelectedTicket(null)
             resetForm()
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-sm hover:bg-primary/90 transition-colors"
+          className="
+            flex items-center gap-2
+            rounded-[var(--radius)]
+            bg-[hsl(var(--primary))]
+            px-4 py-2
+            text-sm font-medium
+            text-white
+            transition hover:opacity-90
+          "
         >
-          <FaPlus />
+          <FaPlus className="text-xs" />
           تیکت جدید
         </button>
       </div>
 
+      {/* New Ticket Form */}
       {showForm && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="bg-white rounded-sm shadow-sm p-6"
+          className="
+            rounded-[var(--radius)]
+            border border-[hsl(var(--border))]
+            bg-white
+            p-5
+          "
         >
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 text-sm">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">عنوان تیکت</label>
+              <label className="mb-1 block opacity-70">عنوان تیکت</label>
               <input
-                type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                className="
+                  w-full rounded-[var(--radius)]
+                  border border-[hsl(var(--border))]
+                  px-3 py-2
+                  focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]
+                "
                 required
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">اولویت</label>
+              <label className="mb-1 block opacity-70">اولویت</label>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                className="
+                  w-full rounded-[var(--radius)]
+                  border border-[hsl(var(--border))]
+                  px-3 py-2
+                "
               >
                 <option value="low">کم</option>
                 <option value="normal">معمولی</option>
                 <option value="high">فوری</option>
               </select>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">پیام</label>
+              <label className="mb-1 block opacity-70">پیام</label>
               <textarea
+                rows={4}
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                className="
+                  w-full rounded-[var(--radius)]
+                  border border-[hsl(var(--border))]
+                  px-3 py-2
+                  focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]
+                "
                 required
               />
             </div>
-            <div className="flex gap-2">
+
+            <div className="flex gap-2 pt-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-primary text-white rounded-sm hover:bg-primary/90 transition-colors"
+                className="
+                  rounded-[var(--radius)]
+                  bg-[hsl(var(--primary))]
+                  px-4 py-2
+                  text-white text-sm
+                  hover:opacity-90
+                "
               >
-                ارسال تیکت
+                ارسال
               </button>
               <button
                 type="button"
@@ -192,7 +193,13 @@ const TicketsModule = () => {
                   setShowForm(false)
                   resetForm()
                 }}
-                className="px-4 py-2 bg-gray-500 text-white rounded-sm hover:bg-gray-600 transition-colors"
+                className="
+                  rounded-[var(--radius)]
+                  bg-gray-200
+                  px-4 py-2
+                  text-sm
+                  hover:bg-gray-300
+                "
               >
                 لغو
               </button>
@@ -201,49 +208,64 @@ const TicketsModule = () => {
         </motion.div>
       )}
 
+      {/* Tickets List */}
       {tickets.length === 0 ? (
-        <div className="bg-white rounded-sm shadow-sm p-8 text-center">
-          <FaTicketAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-gray-500">هیچ تیکتی ندارید</p>
+        <div className="rounded-[var(--radius)] border border-[hsl(var(--border))] bg-white p-8 text-center text-sm opacity-60">
+           <FaTicketAlt className="mx-auto mb-3 text-3xl opacity-30" />
+          هیچ تیکتی ثبت نشده است
         </div>
       ) : (
-        <div className="space-y-4">
-          {tickets.map((ticket) => (
-            <motion.div
-              key={ticket._id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-sm shadow-sm p-4"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-gray-900">{ticket.title}</h3>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm font-medium ${getPriorityColor(ticket.priority)}`}>
-                    {getPriorityText(ticket.priority)}
-                  </span>
-                  <span className={`text-sm font-medium ${getStatusColor(ticket.status)}`}>
-                    {getStatusText(ticket.status)}
-                  </span>
+        <div className="space-y-3">
+          {tickets.map((ticket) => {
+            const priority = priorityMeta[ticket.priority]
+            const status = statusMeta[ticket.status]
+
+            return (
+              <motion.div
+                key={ticket._id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="
+                  rounded-[var(--radius)]
+                  border border-[hsl(var(--border))]
+                  bg-white
+                  p-4
+                "
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-medium text-sm">{ticket.title}</p>
+                    <p className="mt-1 text-xs opacity-60 line-clamp-2">
+                      {ticket.message}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-1 text-xs">
+                    <span className={priority.color}>{priority.text}</span>
+                    <span className={status.color}>{status.text}</span>
+                  </div>
                 </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-2">{ticket.message}</p>
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>{new Date(ticket.createdAt).toLocaleDateString('fa-IR')}</span>
-                <div className="flex gap-2">
-                  <button className="flex items-center gap-1 text-primary hover:text-primary/80">
-                    <FaEye />
-                    مشاهده
-                  </button>
-                  {ticket.status !== 'closed' && (
-                    <button className="flex items-center gap-1 text-blue-500 hover:text-blue-600">
-                      <FaReply />
-                      پاسخ
+
+                <div className="mt-4 flex items-center justify-between text-xs opacity-60">
+                  <span>
+                    {new Date(ticket.createdAt).toLocaleDateString('fa-IR')}
+                  </span>
+                  <div className="flex gap-3">
+                    <button className="flex items-center gap-1 hover:opacity-80">
+                      <FaEye />
+                      مشاهده
                     </button>
-                  )}
+                    {ticket.status !== 'closed' && (
+                      <button className="flex items-center gap-1 text-blue-600 hover:opacity-80">
+                        <FaReply />
+                        پاسخ
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            )
+          })}
         </div>
       )}
     </motion.div>

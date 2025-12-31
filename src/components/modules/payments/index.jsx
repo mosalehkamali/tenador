@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaCreditCard, FaEye } from 'react-icons/fa'
+import { FaCreditCard } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 
@@ -19,10 +19,8 @@ const PaymentsModule = () => {
       if (res.ok) {
         const data = await res.json()
         setPayments(data.payments)
-      } else {
-        toast.error('خطا در بارگذاری پرداخت‌ها')
-      }
-    } catch (error) {
+      } else toast.error('خطا در بارگذاری پرداخت‌ها')
+    } catch {
       toast.error('خطا در اتصال')
     } finally {
       setLoading(false)
@@ -49,73 +47,86 @@ const PaymentsModule = () => {
 
   if (loading) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex justify-center items-center h-64"
-      >
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </motion.div>
+      <div className="flex h-56 items-center justify-center">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-[hsl(var(--primary))] border-t-transparent" />
+      </div>
     )
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
+      transition={{ duration: 0.25 }}
+      className="space-y-5"
     >
-      <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-        <FaCreditCard />
+      <h1 className="flex items-center gap-2 text-lg font-semibold">
+        <FaCreditCard className="text-sm opacity-70" />
         پرداخت‌های من
       </h1>
 
       {payments.length === 0 ? (
-        <div className="bg-white rounded-sm shadow-sm p-8 text-center">
-          <FaCreditCard className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-gray-500">هیچ پرداختی ندارید</p>
+        <div className="rounded-[var(--radius)] border border-[hsl(var(--border))] bg-white p-8 text-center">
+          <FaCreditCard className="mx-auto mb-3 text-3xl opacity-30" />
+          <p className="text-sm text-[hsl(var(--foreground)/0.6)]">
+            هیچ پرداختی ثبت نشده
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
           {payments.map((payment) => (
             <motion.div
               key={payment._id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-sm shadow-sm p-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="
+                rounded-[var(--radius)]
+                border border-[hsl(var(--border))]
+                bg-white
+                px-4 py-3
+              "
             >
-              <div className="flex items-center justify-between mb-2">
+              {/* Header */}
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <FaCreditCard className="text-primary" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius)] bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))]">
+                    <FaCreditCard className="text-sm" />
+                  </div>
                   <div>
-                    <p className="font-medium">پرداخت #{payment._id.slice(-8)}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm font-medium">
+                      پرداخت #{payment._id.slice(-8)}
+                    </p>
+                    <p className="text-xs text-[hsl(var(--foreground)/0.6)]">
                       {new Date(payment.createdAt).toLocaleDateString('fa-IR')}
                     </p>
                   </div>
                 </div>
+
                 <div className="text-left">
-                  <p className={`font-bold ${getStatusColor(payment.status)}`}>
+                  <p className={`text-sm font-semibold ${getStatusColor(payment.status)}`}>
                     {getStatusText(payment.status)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs text-[hsl(var(--foreground)/0.6)]">
                     {payment.method === 'card' ? 'کارت بانکی' : payment.method}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              {/* Footer */}
+              <div className="mt-3 flex items-center justify-between border-t border-[hsl(var(--border))] pt-3">
                 <div>
-                  <p className="text-sm text-gray-500">مبلغ</p>
-                  <p className="font-bold text-primary">
+                  <p className="text-xs text-[hsl(var(--foreground)/0.6)]">مبلغ</p>
+                  <p className="text-sm font-semibold text-[hsl(var(--primary))]">
                     {payment.amount?.toLocaleString('fa-IR')} تومان
                   </p>
                 </div>
+
                 {payment.order && (
                   <div className="text-left">
-                    <p className="text-sm text-gray-500">سفارش</p>
-                    <p className="font-medium">#{payment.order.slice(-8)}</p>
+                    <p className="text-xs text-[hsl(var(--foreground)/0.6)]">سفارش</p>
+                    <p className="text-sm font-medium">
+                      #{payment.order.slice(-8)}
+                    </p>
                   </div>
                 )}
               </div>

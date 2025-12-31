@@ -1,7 +1,18 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBars, FaTimes, FaUser, FaHeart, FaShoppingBag, FaCreditCard, FaMapMarkerAlt, FaWallet, FaTicketAlt, FaSignOutAlt } from 'react-icons/fa'
+import {
+  FaBars,
+  FaTimes,
+  FaUser,
+  FaHeart,
+  FaShoppingBag,
+  FaCreditCard,
+  FaMapMarkerAlt,
+  FaWallet,
+  FaTicketAlt,
+  FaSignOutAlt,
+} from 'react-icons/fa'
 import { useState } from 'react'
 import { useDashboardStore } from '../lib/store'
 import { toast } from 'react-toastify'
@@ -31,18 +42,25 @@ const UserDashboardLayout = ({ children }) => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
       window.location.href = '/auth/login'
-    } catch (error) {
+    } catch {
       toast.error('خطا در خروج')
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 rtl">
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 right-4 z-50">
+    <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rtl">
+      {/* Mobile toggle */}
+      <div className="fixed top-4 right-4 z-50 lg:hidden">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 bg-white rounded-sm shadow-sm text-gray-600 hover:text-gray-900"
+          className="
+            p-2
+            rounded-[var(--radius)]
+            bg-white
+            border border-[hsl(var(--border))]
+            text-[hsl(var(--foreground))]
+            shadow-sm
+          "
         >
           {sidebarOpen ? <FaTimes /> : <FaBars />}
         </button>
@@ -51,72 +69,87 @@ const UserDashboardLayout = ({ children }) => {
       {/* Sidebar */}
       <AnimatePresence>
         {(sidebarOpen || window.innerWidth >= 1024) && (
-          <motion.div
-            initial={{ x: -300 }}
+          <motion.aside
+            initial={{ x: 280 }}
             animate={{ x: 0 }}
-            exit={{ x: -300 }}
-            transition={{ type: 'tween', duration: 0.3 }}
-            className={`fixed right-0 top-0 h-full w-64 bg-white shadow-lg z-40 ${
-              window.innerWidth < 1024 ? 'lg:hidden' : ''
-            }`}
+            exit={{ x: 280 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="
+              fixed top-0 right-0 z-40
+              h-full w-60
+              bg-white
+              border-l border-[hsl(var(--border))]
+            "
           >
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-8">داشبورد کاربر</h2>
-              <nav className="space-y-2">
+            <div className="flex h-full flex-col p-4">
+              <h2 className="mb-6 text-sm font-semibold text-[hsl(var(--foreground)/0.8)]">
+                داشبورد کاربر
+              </h2>
+
+              <nav className="flex-1 space-y-1">
                 {menuItems.map((item) => {
                   const Icon = item.icon
+                  const active = currentModule === item.id
+
                   return (
                     <button
                       key={item.id}
                       onClick={() => handleModuleChange(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm text-right transition-colors ${
-                        currentModule === item.id
-                          ? 'bg-primary text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
+                      className={`
+                        group flex w-full items-center gap-3
+                        rounded-[var(--radius)]
+                        px-3 py-2 text-sm
+                        transition-colors
+                        ${
+                          active
+                            ? 'bg-[hsl(var(--primary)/0.12)] text-[hsl(var(--primary))]'
+                            : 'text-[hsl(var(--foreground)/0.8)] hover:bg-[hsl(var(--border)/0.5)]'
+                        }
+                      `}
                     >
-                      <Icon />
-                      <span className="text-sm">{item.label}</span>
+                      <Icon className="text-xs opacity-80" />
+                      {item.label}
                     </button>
                   )
                 })}
               </nav>
-              <div className="absolute bottom-6 right-6 left-6">
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-sm text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <FaSignOutAlt />
-                  <span className="text-sm">خروج</span>
-                </button>
-              </div>
+
+              <button
+                onClick={handleLogout}
+                className="
+                  mt-4 flex items-center gap-3
+                  rounded-[var(--radius)]
+                  px-3 py-2 text-sm
+                  text-red-600
+                  hover:bg-red-50
+                "
+              >
+                <FaSignOutAlt className="text-xs" />
+                خروج
+              </button>
             </div>
-          </motion.div>
+          </motion.aside>
         )}
       </AnimatePresence>
 
-      {/* Main content */}
-      <div className="lg:mr-64">
+      {/* Main */}
+      <div className="lg:mr-60">
         <motion.main
           key={currentModule}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="p-6"
+          transition={{ duration: 0.25 }}
+          className="p-4 lg:p-6"
         >
           {children}
         </motion.main>
       </div>
 
-      {/* Overlay for mobile */}
+      {/* Mobile overlay */}
       {sidebarOpen && window.innerWidth < 1024 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+        <div
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
         />
       )}
     </div>

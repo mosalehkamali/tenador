@@ -31,10 +31,8 @@ const AddressesModule = () => {
       if (res.ok) {
         const data = await res.json()
         setAddresses(data.addresses)
-      } else {
-        toast.error('خطا در بارگذاری آدرس‌ها')
-      }
-    } catch (error) {
+      } else toast.error('خطا در بارگذاری آدرس‌ها')
+    } catch {
       toast.error('خطا در اتصال')
     } finally {
       setLoading(false)
@@ -59,10 +57,8 @@ const AddressesModule = () => {
         setEditingAddress(null)
         resetForm()
         toast.success(editingAddress ? 'آدرس بروزرسانی شد' : 'آدرس اضافه شد')
-      } else {
-        toast.error('خطا در ذخیره آدرس')
-      }
-    } catch (error) {
+      } else toast.error('خطا در ذخیره آدرس')
+    } catch {
       toast.error('خطا در اتصال')
     }
   }
@@ -87,9 +83,7 @@ const AddressesModule = () => {
       text: 'آیا مطمئن هستید؟',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'بله، حذف کن',
+      confirmButtonText: 'حذف',
       cancelButtonText: 'لغو'
     })
 
@@ -97,12 +91,10 @@ const AddressesModule = () => {
       try {
         const res = await fetch(`/api/addresses/${addressId}`, { method: 'DELETE' })
         if (res.ok) {
-          setAddresses(addresses.filter(addr => addr._id !== addressId))
+          setAddresses(addresses.filter(a => a._id !== addressId))
           toast.success('آدرس حذف شد')
-        } else {
-          toast.error('خطا در حذف آدرس')
-        }
-      } catch (error) {
+        } else toast.error('خطا در حذف')
+      } catch {
         toast.error('خطا در اتصال')
       }
     }
@@ -122,135 +114,139 @@ const AddressesModule = () => {
 
   if (loading) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex justify-center items-center h-64"
-      >
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </motion.div>
+      <div className="flex h-56 items-center justify-center">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-[hsl(var(--primary))] border-t-transparent" />
+      </div>
     )
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
+      transition={{ duration: 0.25 }}
+      className="space-y-5"
     >
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <FaMapMarkerAlt />
+        <h1 className="flex items-center gap-2 text-lg font-semibold">
+          <FaMapMarkerAlt className="text-sm opacity-70" />
           آدرس‌های من
         </h1>
+
         <button
           onClick={() => {
             setShowForm(!showForm)
             setEditingAddress(null)
             resetForm()
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-sm hover:bg-primary/90 transition-colors"
+          className="
+            flex items-center gap-2
+            rounded-[var(--radius)]
+            bg-[hsl(var(--primary))]
+            px-3 py-2
+            text-sm text-white
+            hover:opacity-90
+          "
         >
-          <FaPlus />
-          افزودن آدرس
+          <FaPlus className="text-xs" />
+          آدرس جدید
         </button>
       </div>
 
+      {/* Form */}
       {showForm && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="bg-white rounded-sm shadow-sm p-6"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="
+            rounded-[var(--radius)]
+            border border-[hsl(var(--border))]
+            bg-white
+            p-4
+          "
         >
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">عنوان آدرس</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">استان</label>
-                <input
-                  type="text"
-                  value={formData.province}
-                  onChange={(e) => setFormData({ ...formData, province: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">شهر</label>
-                <input
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">کد پستی</label>
-                <input
-                  type="text"
-                  value={formData.postalCode}
-                  onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                  required
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[
+                ['title', 'عنوان آدرس'],
+                ['province', 'استان'],
+                ['city', 'شهر'],
+                ['postalCode', 'کد پستی'],
+              ].map(([key, label]) => (
+                <div key={key}>
+                  <label className="mb-1 block text-xs opacity-70">{label}</label>
+                  <input
+                    value={formData[key]}
+                    onChange={(e) =>
+                      setFormData({ ...formData, [key]: e.target.value })
+                    }
+                    className="
+                      w-full rounded-[var(--radius)]
+                      border border-[hsl(var(--border))]
+                      px-3 py-2
+                      focus:outline-none
+                      focus:ring-1 focus:ring-[hsl(var(--primary))]
+                    "
+                    required
+                  />
+                </div>
+              ))}
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">آدرس کامل</label>
+              <label className="mb-1 block text-xs opacity-70">آدرس کامل</label>
               <textarea
+                rows={3}
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                className="
+                  w-full rounded-[var(--radius)]
+                  border border-[hsl(var(--border))]
+                  px-3 py-2
+                  focus:outline-none
+                  focus:ring-1 focus:ring-[hsl(var(--primary))]
+                "
                 required
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">شماره تلفن</label>
+              <label className="mb-1 block text-xs opacity-70">شماره تلفن</label>
               <input
-                type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                className="
+                  w-full rounded-[var(--radius)]
+                  border border-[hsl(var(--border))]
+                  px-3 py-2
+                "
                 required
               />
             </div>
-            <div className="flex items-center gap-2">
+
+            <label className="flex items-center gap-2 text-xs">
               <input
                 type="checkbox"
-                id="isDefault"
                 checked={formData.isDefault}
-                onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, isDefault: e.target.checked })
+                }
               />
-              <label htmlFor="isDefault" className="text-sm">آدرس پیش‌فرض</label>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary text-white rounded-sm hover:bg-primary/90 transition-colors"
-              >
+              آدرس پیش‌فرض
+            </label>
+
+            <div className="flex gap-2 pt-2">
+              <button className="rounded-[var(--radius)] bg-[hsl(var(--primary))] px-4 py-2 text-white text-sm">
                 {editingAddress ? 'بروزرسانی' : 'ذخیره'}
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setShowForm(false)
-                  setEditingAddress(null)
                   resetForm()
                 }}
-                className="px-4 py-2 bg-gray-500 text-white rounded-sm hover:bg-gray-600 transition-colors"
+                className="rounded-[var(--radius)] border px-4 py-2 text-sm"
               >
                 لغو
               </button>
@@ -259,43 +255,44 @@ const AddressesModule = () => {
         </motion.div>
       )}
 
+      {/* List */}
       {addresses.length === 0 ? (
-        <div className="bg-white rounded-sm shadow-sm p-8 text-center">
-          <FaMapMarkerAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-gray-500">هیچ آدرسی ثبت نشده است</p>
+        <div className="rounded-[var(--radius)] border bg-white p-8 text-center text-sm opacity-60">
+          <FaMapMarkerAlt className="mx-auto mb-3 text-3xl opacity-30" />
+          آدرسی ثبت نشده
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {addresses.map((address) => (
             <motion.div
               key={address._id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-sm shadow-sm p-4 relative"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="
+                relative rounded-[var(--radius)]
+                border border-[hsl(var(--border))]
+                bg-white p-4
+              "
             >
               {address.isDefault && (
-                <span className="absolute top-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded-sm">
+                <span className="absolute top-2 right-2 rounded bg-[hsl(var(--primary))] px-2 py-0.5 text-xs text-white">
                   پیش‌فرض
                 </span>
               )}
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="font-medium text-gray-900">{address.title}</h3>
+
+              <div className="flex items-start justify-between">
+                <p className="font-medium">{address.title}</p>
                 <div className="flex gap-1">
-                  <button
-                    onClick={() => handleEdit(address)}
-                    className="p-1 text-blue-500 hover:bg-blue-50 rounded-sm transition-colors"
-                  >
+                  <button onClick={() => handleEdit(address)} className="p-1 opacity-60 hover:opacity-100">
                     <FaEdit />
                   </button>
-                  <button
-                    onClick={() => handleDelete(address._id)}
-                    className="p-1 text-red-500 hover:bg-red-50 rounded-sm transition-colors"
-                  >
+                  <button onClick={() => handleDelete(address._id)} className="p-1 text-red-500 opacity-60 hover:opacity-100">
                     <FaTrash />
                   </button>
                 </div>
               </div>
-              <div className="space-y-1 text-sm text-gray-600">
+
+              <div className="mt-2 space-y-1 text-xs opacity-70">
                 <p>{address.province}، {address.city}</p>
                 <p>{address.address}</p>
                 <p>کد پستی: {address.postalCode}</p>
