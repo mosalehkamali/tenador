@@ -60,6 +60,11 @@ const ProductSchema = new mongoose.Schema(
 
     },
 
+    stock: {
+      type: Number,
+      default: 0,
+    },
+
     slug: { type: String, unique: true },
 
     variants: [{ type: mongoose.Schema.Types.ObjectId, ref: "Variant" }],
