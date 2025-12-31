@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { FaEye, FaEyeSlash, FaPhone, FaLock, FaUser } from 'react-icons/fa';
-import { showToast } from '@/lib/toast';
 
-const AuthForm = ({ isLogin, onSubmit, loading }) => {
-  const [formData, setFormData] = useState({
+export default function AuthForm({ isLogin, onSubmit, loading }) {
+  const [form, setForm] = useState({
     phone: '',
     password: '',
     name: '',
@@ -14,143 +12,115 @@ const AuthForm = ({ isLogin, onSubmit, loading }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: '' });
+  const update = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: null });
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.phone) {
-      newErrors.phone = 'شماره تلفن الزامی است';
-    } else if (!/^09\d{9}$/.test(formData.phone)) {
-      newErrors.phone = 'شماره تلفن معتبر نیست';
+  const validate = () => {
+    const err = {};
+
+    if (!/^09\d{9}$/.test(form.phone)) {
+      err.phone = 'شماره تلفن معتبر نیست';
     }
-    if (!formData.password) {
-      newErrors.password = 'رمز عبور الزامی است';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'رمز عبور باید حداقل ۸ کاراکتر باشد';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
-      newErrors.password = 'رمز عبور باید شامل حروف بزرگ، کوچک، عدد و کاراکتر ویژه باشد';
+
+    if (form.password.length < 8) {
+      err.password = 'رمز عبور حداقل ۸ کاراکتر';
     }
-    if (!isLogin && !formData.name.trim()) {
-      newErrors.name = 'نام الزامی است';
+
+    if (!isLogin && !form.name.trim()) {
+      err.name = 'نام را وارد کنید';
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+
+    setErrors(err);
+    return Object.keys(err).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const submit = (e) => {
     e.preventDefault();
-    if (!validateForm()) {
-      return;
-    }
-    await onSubmit(formData);
+    if (!validate()) return;
+    onSubmit?.(form);
   };
 
-  const fieldVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
+  const inputClass = (error) => `
+    w-full h-11 pr-10 pl-4 text-sm
+    border ${error ? 'border-red-500' : 'border-[hsl(var(--border))]'}
+    rounded-[var(--radius)]
+    bg-white text-[hsl(var(--foreground))]
+    placeholder:text-gray-400
+    focus:outline-none
+    focus:border-[hsl(var(--primary))]
+    transition
+  `;
 
   return (
-    <motion.form
-      onSubmit={handleSubmit}
-      className="space-y-6"
-      initial="hidden"
-      animate="visible"
-      variants={{
-        visible: {
-          transition: {
-            staggerChildren: 0.1,
-          },
-        },
-      }}
-    >
+    <form onSubmit={submit} className="space-y-4 text-right">
       {!isLogin && (
-        <motion.div
-          className="relative"
-          variants={fieldVariants}
-        >
-          <FaUser className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <div className="relative">
+          <FaUser className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
           <input
-            type="text"
             name="name"
             placeholder="نام"
-            value={formData.name}
-            onChange={handleChange}
-            className={`w-full pr-10 pl-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-white text-right ${
-              errors.name ? 'border-red-500' : 'border-gray-300'
-            }`}
+            value={form.name}
+            onChange={update}
             disabled={loading}
+            className={inputClass(errors.name)}
           />
-          {errors.name && (
-            <p className="text-red-500 text-sm mt-1 text-right">{errors.name}</p>
-          )}
-        </motion.div>
+          {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+        </div>
       )}
-      <motion.div
-        className="relative"
-        variants={fieldVariants}
-      >
-        <FaPhone className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+
+      <div className="relative">
+        <FaPhone className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
         <input
-          type="tel"
           name="phone"
           placeholder="شماره تلفن"
-          value={formData.phone}
-          onChange={handleChange}
-          className={`w-full pr-10 pl-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-white text-right ${
-            errors.phone ? 'border-red-500' : 'border-gray-300'
-          }`}
+          value={form.phone}
+          onChange={update}
           disabled={loading}
+          className={inputClass(errors.phone)}
         />
-        {errors.phone && (
-          <p className="text-red-500 text-sm mt-1 text-right">{errors.phone}</p>
-        )}
-      </motion.div>
-      <motion.div
-        className="relative"
-        variants={fieldVariants}
-      >
-        <FaLock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+      </div>
+
+      <div className="relative">
+        <FaLock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
         <input
           type={showPassword ? 'text' : 'password'}
           name="password"
           placeholder="رمز عبور"
-          value={formData.password}
-          onChange={handleChange}
-          className={`w-full pr-10 pl-12 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-white text-right ${
-            errors.password ? 'border-red-500' : 'border-gray-300'
-          }`}
+          value={form.password}
+          onChange={update}
           disabled={loading}
+          className={inputClass(errors.password) + ' pl-10'}
         />
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
         >
           {showPassword ? <FaEyeSlash /> : <FaEye />}
         </button>
-        {errors.password && (
-          <p className="text-red-500 text-sm mt-1 text-right">{errors.password}</p>
-        )}
-      </motion.div>
-      <motion.button
+        {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+      </div>
+
+      <button
         type="submit"
         disabled={loading}
-        className="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
-        variants={fieldVariants}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        className="
+          w-full h-11
+          bg-[hsl(var(--primary))]
+          text-white text-sm font-medium
+          rounded-[var(--radius)]
+          hover:opacity-90
+          transition
+          disabled:opacity-50
+        "
       >
-        {loading ? 'در حال پردازش...' : isLogin ? 'ورود' : 'ثبت‌نام'}
-      </motion.button>
-    </motion.form>
+        {loading ? 'در حال پردازش…' : isLogin ? 'ورود' : 'ثبت‌نام'}
+      </button>
+    </form>
   );
-};
-
-export default AuthForm;
+}
