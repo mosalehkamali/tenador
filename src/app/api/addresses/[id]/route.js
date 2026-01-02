@@ -5,7 +5,7 @@ import Address from "base/models/Address";
 export async function GET(req, { params }) {
   try {
     await connectToDB();
-    const { id } = params;
+    const { id } = await params;
     const address = await Address.findById(id).populate('user');
     if (!address) {
       return NextResponse.json({ error: "Address not found" }, { status: 404 });
@@ -19,13 +19,20 @@ export async function GET(req, { params }) {
 export async function PUT(req, { params }) {
   try {
     await connectToDB();
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { user, title, fullName, phone, city, addressLine, postalCode, isDefault } = body;
 
-    // Validation
     if (!user || !title || !fullName || !phone || !city || !addressLine) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // 🔥 ENFORCE SINGLE DEFAULT
+    if (isDefault) {
+      await Address.updateMany(
+        { user },
+        { $set: { isDefault: false } }
+      );
     }
 
     const updatedAddress = await Address.findByIdAndUpdate(
@@ -38,7 +45,7 @@ export async function PUT(req, { params }) {
         city,
         addressLine,
         postalCode,
-        isDefault: isDefault || false
+        isDefault: !!isDefault,
       },
       { new: true }
     );
@@ -53,10 +60,11 @@ export async function PUT(req, { params }) {
   }
 }
 
+
 export async function DELETE(req, { params }) {
   try {
     await connectToDB();
-    const { id } = params;
+    const { id } = await params;
     const deletedAddress = await Address.findByIdAndDelete(id);
     if (!deletedAddress) {
       return NextResponse.json({ error: "Address not found" }, { status: 404 });

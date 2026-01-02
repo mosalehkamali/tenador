@@ -18,9 +18,16 @@ export async function POST(req) {
     const body = await req.json();
     const { user, title, fullName, phone, city, addressLine, postalCode, isDefault } = body;
 
-    // Validation
     if (!user || !title || !fullName || !phone || !city || !addressLine) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // 🔥 ENFORCE SINGLE DEFAULT
+    if (isDefault) {
+      await Address.updateMany(
+        { user },
+        { $set: { isDefault: false } }
+      );
     }
 
     const newAddress = new Address({
@@ -31,7 +38,7 @@ export async function POST(req) {
       city,
       addressLine,
       postalCode,
-      isDefault: isDefault || false
+      isDefault: !!isDefault,
     });
 
     await newAddress.save();

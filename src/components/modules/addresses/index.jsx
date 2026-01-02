@@ -1,7 +1,13 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { FaMapMarkerAlt, FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  FaMapMarkerAlt,
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaStar,
+} from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import Swal from 'sweetalert2'
@@ -9,300 +15,442 @@ import Swal from 'sweetalert2'
 const AddressesModule = () => {
   const [addresses, setAddresses] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
+  const [user, setUser] = useState(null)
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState(null)
+
   const [formData, setFormData] = useState({
     title: '',
-    province: '',
+    fullName: '',
     city: '',
-    address: '',
-    postalCode: '',
     phone: '',
-    isDefault: false
+    postalCode: '',
+    addressLine: '',
+    isDefault: false,
   })
 
   useEffect(() => {
+    fetchUserProfile()
     fetchAddresses()
   }, [])
 
-  const fetchAddresses = async () => {
-    try {
-      const res = await fetch('/api/addresses')
-      if (res.ok) {
-        const data = await res.json()
-        setAddresses(data.addresses)
-      } else toast.error('خطا در بارگذاری آدرس‌ها')
-    } catch {
-      toast.error('خطا در اتصال')
-    } finally {
-      setLoading(false)
+  const fetchUserProfile = async () => {
+    const res = await fetch('/api/auth/profile')
+    if (res.ok) {
+      const data = await res.json()
+      setUser(data.user)
     }
+  }
+
+  const fetchAddresses = async () => {
+    const res = await fetch('/api/addresses')
+    if (res.ok) {
+      const data = await res.json()
+      setAddresses(
+        [...data.addresses].sort(
+          (a, b) => Number(b.isDefault) - Number(a.isDefault)
+        )
+      )
+    }
+    setLoading(false)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    try {
-      const url = editingAddress ? `/api/addresses/${editingAddress._id}` : '/api/addresses'
-      const method = editingAddress ? 'PUT' : 'POST'
+    const url = editingAddress
+      ? `/api/addresses/${editingAddress._id}`
+      : '/api/addresses'
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
+    const method = editingAddress ? 'PUT' : 'POST'
 
-      if (res.ok) {
-        fetchAddresses()
-        setShowForm(false)
-        setEditingAddress(null)
-        resetForm()
-        toast.success(editingAddress ? 'آدرس بروزرسانی شد' : 'آدرس اضافه شد')
-      } else toast.error('خطا در ذخیره آدرس')
-    } catch {
-      toast.error('خطا در اتصال')
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...formData, user: user.id }),
+    })
+
+    if (res.ok) {
+      fetchAddresses()
+      closeModal()
+      toast.success('ذخیره شد')
+    }
+  }
+
+  const setAsDefault = async (id) => {
+    const res = await fetch(`/api/addresses/${id}/set-default`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: user.id }),
+    })
+    if (res.ok) fetchAddresses()
+  }
+
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: 'حذف آدرس؟',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'حذف',
+      cancelButtonText: 'لغو',
+    })
+    if (result.isConfirmed) {
+      await fetch(`/api/addresses/${id}`, { method: 'DELETE' })
+      fetchAddresses()
     }
   }
 
   const handleEdit = (address) => {
+    setFormData({ ...address })
     setEditingAddress(address)
-    setFormData({
-      title: address.title,
-      province: address.province,
-      city: address.city,
-      address: address.address,
-      postalCode: address.postalCode,
-      phone: address.phone,
-      isDefault: address.isDefault
-    })
-    setShowForm(true)
+    setIsModalOpen(true)
   }
 
-  const handleDelete = async (addressId) => {
-    const result = await Swal.fire({
-      title: 'حذف آدرس',
-      text: 'آیا مطمئن هستید؟',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'حذف',
-      cancelButtonText: 'لغو'
-    })
-
-    if (result.isConfirmed) {
-      try {
-        const res = await fetch(`/api/addresses/${addressId}`, { method: 'DELETE' })
-        if (res.ok) {
-          setAddresses(addresses.filter(a => a._id !== addressId))
-          toast.success('آدرس حذف شد')
-        } else toast.error('خطا در حذف')
-      } catch {
-        toast.error('خطا در اتصال')
-      }
-    }
-  }
-
-  const resetForm = () => {
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setEditingAddress(null)
     setFormData({
       title: '',
-      province: '',
+      fullName: '',
       city: '',
-      address: '',
-      postalCode: '',
       phone: '',
-      isDefault: false
+      postalCode: '',
+      addressLine: '',
+      isDefault: false,
     })
   }
 
-  if (loading) {
-    return (
-      <div className="flex h-56 items-center justify-center">
-        <div className="h-7 w-7 animate-spin rounded-full border-2 border-[hsl(var(--primary))] border-t-transparent" />
-      </div>
-    )
-  }
+  if (loading) return null
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-      className="space-y-5"
-    >
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="flex items-center gap-2 text-lg font-semibold">
-          <FaMapMarkerAlt className="text-sm opacity-70" />
+      <div className="flex justify-between">
+        <h1 className="flex items-center gap-2 font-semibold">
+          <FaMapMarkerAlt />
           آدرس‌های من
         </h1>
-
         <button
-          onClick={() => {
-            setShowForm(!showForm)
-            setEditingAddress(null)
-            resetForm()
-          }}
-          className="
-            flex items-center gap-2
-            rounded-[var(--radius)]
-            bg-[hsl(var(--primary))]
-            px-3 py-2
-            text-sm text-white
-            hover:opacity-90
-          "
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 bg-[hsl(var(--primary))] text-white px-3 py-2 rounded"
         >
-          <FaPlus className="text-xs" />
-          آدرس جدید
+          <FaPlus /> آدرس جدید
         </button>
       </div>
 
-      {/* Form */}
-      {showForm && (
-        <motion.div
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="
-            rounded-[var(--radius)]
-            border border-[hsl(var(--border))]
-            bg-white
-            p-4
-          "
-        >
-          <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {[
-                ['title', 'عنوان آدرس'],
-                ['province', 'استان'],
-                ['city', 'شهر'],
-                ['postalCode', 'کد پستی'],
-              ].map(([key, label]) => (
-                <div key={key}>
-                  <label className="mb-1 block text-xs opacity-70">{label}</label>
-                  <input
-                    value={formData[key]}
-                    onChange={(e) =>
-                      setFormData({ ...formData, [key]: e.target.value })
-                    }
-                    className="
-                      w-full rounded-[var(--radius)]
-                      border border-[hsl(var(--border))]
-                      px-3 py-2
-                      focus:outline-none
-                      focus:ring-1 focus:ring-[hsl(var(--primary))]
-                    "
-                    required
-                  />
-                </div>
-              ))}
-            </div>
+      {/* Cards */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {addresses.map((address) => (
+     <motion.div
+     key={address._id}
+     initial={{ opacity: 0, y: 6 }}
+     animate={{ opacity: 1, y: 0 }}
+     className="
+       relative
+       rounded-[var(--radius)]
+       border border-[hsl(var(--border))]
+       bg-white
+       p-4
+       space-y-4
+     "
+   >
+     {/* Default badge */}
+     {address.isDefault && (
+       <span
+         className="
+           absolute top-3 left-3
+           rounded-md
+           bg-[hsl(var(--primary))]
+           px-2 py-1
+           text-[11px]
+           font-medium
+           text-white
+         "
+       >
+         پیش‌فرض
+       </span>
+     )}
+   
+     {/* Header */}
+     <div className="space-y-0.5">
+       <p className="text-sm font-semibold text-[hsl(var(--foreground))]">
+         {address.title}
+       </p>
+       <p className="text-xs text-[hsl(var(--muted-foreground))]">
+         {address.fullName}
+       </p>
+     </div>
+   
+     {/* Info */}
+     <div className="space-y-2 text-xs text-[hsl(var(--muted-foreground))]">
+       <div className="flex gap-2">
+         <span className="w-16 shrink-0 opacity-60">شهر</span>
+         <span>{address.city}</span>
+       </div>
+   
+       <div className="flex gap-2">
+         <span className="w-16 shrink-0 opacity-60">تلفن</span>
+         <span>{address.phone}</span>
+       </div>
+   
+       {address.postalCode && (
+         <div className="flex gap-2">
+           <span className="w-16 shrink-0 opacity-60">کد پستی</span>
+           <span>{address.postalCode}</span>
+         </div>
+       )}
+   
+       <div className="flex gap-2">
+         <span className="w-16 shrink-0 opacity-60">آدرس</span>
+         <span className="leading-relaxed text-[hsl(var(--foreground))]">
+           {address.addressLine}
+         </span>
+       </div>
+     </div>
+   
+     {/* Actions */}
+     <div className="flex items-center justify-end gap-3 pt-2">
+       {!address.isDefault && (
+         <button
+           onClick={() => setAsDefault(address._id)}
+           className="
+             group
+             flex items-center gap-1.5
+             cursor-pointer
+             rounded-md
+             border border-[hsl(var(--border))]
+             px-3 py-1.5
+             text-xs
+             text-[hsl(var(--foreground))]
+             transition
+             hover:bg-[hsl(var(--primary)/0.08)]
+           "
+         >
+           <FaMapMarkerAlt className="text-[12px] opacity-70 group-hover:opacity-100" />
+           پیش‌فرض
+         </button>
+       )}
+   
+       <button
+         onClick={() => handleEdit(address)}
+         className="
+           group
+           flex items-center gap-1.5
+           cursor-pointer
+           rounded-md
+           border border-[hsl(var(--border))]
+           px-3 py-1.5
+           text-xs
+           text-[hsl(var(--foreground))]
+           transition
+           hover:bg-[hsl(var(--muted))]
+         "
+       >
+         <FaEdit className="text-[12px] opacity-70 group-hover:opacity-100" />
+         ویرایش
+       </button>
+   
+       <button
+         onClick={() => handleDelete(address._id)}
+         className="
+           group
+           flex items-center gap-1.5
+           cursor-pointer
+           rounded-md
+           border border-red-200
+           px-3 py-1.5
+           text-xs
+           text-red-500
+           transition
+           hover:bg-red-50
+         "
+       >
+         <FaTrash className="text-[12px] opacity-70 group-hover:opacity-100" />
+         حذف
+       </button>
+     </div>
+   </motion.div>
+   
+     
+       
+        ))}
+      </div>
 
-            <div>
-              <label className="mb-1 block text-xs opacity-70">آدرس کامل</label>
-              <textarea
-                rows={3}
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="
-                  w-full rounded-[var(--radius)]
-                  border border-[hsl(var(--border))]
-                  px-3 py-2
-                  focus:outline-none
-                  focus:ring-1 focus:ring-[hsl(var(--primary))]
-                "
-                required
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs opacity-70">شماره تلفن</label>
-              <input
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="
-                  w-full rounded-[var(--radius)]
-                  border border-[hsl(var(--border))]
-                  px-3 py-2
-                "
-                required
-              />
-            </div>
-
-            <label className="flex items-center gap-2 text-xs">
-              <input
-                type="checkbox"
-                checked={formData.isDefault}
-                onChange={(e) =>
-                  setFormData({ ...formData, isDefault: e.target.checked })
-                }
-              />
-              آدرس پیش‌فرض
-            </label>
-
-            <div className="flex gap-2 pt-2">
-              <button className="rounded-[var(--radius)] bg-[hsl(var(--primary))] px-4 py-2 text-white text-sm">
-                {editingAddress ? 'بروزرسانی' : 'ذخیره'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false)
-                  resetForm()
-                }}
-                className="rounded-[var(--radius)] border px-4 py-2 text-sm"
-              >
-                لغو
-              </button>
-            </div>
-          </form>
-        </motion.div>
-      )}
-
-      {/* List */}
-      {addresses.length === 0 ? (
-        <div className="rounded-[var(--radius)] border bg-white p-8 text-center text-sm opacity-60">
-          <FaMapMarkerAlt className="mx-auto mb-3 text-3xl opacity-30" />
-          آدرسی ثبت نشده
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {addresses.map((address) => (
-            <motion.div
-              key={address._id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="
-                relative rounded-[var(--radius)]
-                border border-[hsl(var(--border))]
-                bg-white p-4
-              "
-            >
-              {address.isDefault && (
-                <span className="absolute top-2 right-2 rounded bg-[hsl(var(--primary))] px-2 py-0.5 text-xs text-white">
-                  پیش‌فرض
-                </span>
-              )}
-
-              <div className="flex items-start justify-between">
-                <p className="font-medium">{address.title}</p>
-                <div className="flex gap-1">
-                  <button onClick={() => handleEdit(address)} className="p-1 opacity-60 hover:opacity-100">
-                    <FaEdit />
-                  </button>
-                  <button onClick={() => handleDelete(address._id)} className="p-1 text-red-500 opacity-60 hover:opacity-100">
-                    <FaTrash />
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-2 space-y-1 text-xs opacity-70">
-                <p>{address.province}، {address.city}</p>
-                <p>{address.address}</p>
-                <p>کد پستی: {address.postalCode}</p>
-                <p>تلفن: {address.phone}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </motion.div>
+      {/* Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+       <motion.div
+       className="fixed inset-0 z-50 flex items-center justify-center"
+       initial={{ opacity: 0 }}
+       animate={{ opacity: 1 }}
+       exit={{ opacity: 0 }}
+     >
+       {/* Overlay */}
+       <div
+         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+         onClick={closeModal}
+       />
+     
+       {/* Modal */}
+       <motion.div
+         initial={{ scale: 0.95, y: 30 }}
+         animate={{ scale: 1, y: 0 }}
+         exit={{ scale: 0.95, y: 30 }}
+         transition={{ type: "spring", stiffness: 300, damping: 25 }}
+         className="
+           relative z-10
+           w-full max-w-lg
+           rounded-lg
+           bg-white
+           p-6
+           shadow-xl
+         "
+       >
+         <h2 className="mb-4 text-base font-semibold text-[hsl(var(--foreground))]">
+           {editingAddress ? "ویرایش آدرس" : "افزودن آدرس جدید"}
+         </h2>
+     
+         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+           {/* Title & Name */}
+           <div className="grid grid-cols-2 gap-4">
+             <div className="space-y-1">
+               <label className="text-xs text-[hsl(var(--muted-foreground))]">
+                 عنوان
+               </label>
+               <input
+                 className="w-full rounded-md border border-[hsl(var(--border))] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+                 value={formData.title}
+                 onChange={(e) =>
+                   setFormData({ ...formData, title: e.target.value })
+                 }
+               />
+             </div>
+     
+             <div className="space-y-1">
+               <label className="text-xs text-[hsl(var(--muted-foreground))]">
+                 نام و نام خانوادگی
+               </label>
+               <input
+                 className="w-full rounded-md border border-[hsl(var(--border))] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+                 value={formData.fullName}
+                 onChange={(e) =>
+                   setFormData({ ...formData, fullName: e.target.value })
+                 }
+               />
+             </div>
+           </div>
+     
+           {/* City & Phone */}
+           <div className="grid grid-cols-2 gap-4">
+             <div className="space-y-1">
+               <label className="text-xs text-[hsl(var(--muted-foreground))]">
+                 شهر
+               </label>
+               <input
+                 className="w-full rounded-md border border-[hsl(var(--border))] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+                 value={formData.city}
+                 onChange={(e) =>
+                   setFormData({ ...formData, city: e.target.value })
+                 }
+               />
+             </div>
+     
+             <div className="space-y-1">
+               <label className="text-xs text-[hsl(var(--muted-foreground))]">
+                 شماره تلفن
+               </label>
+               <input
+                 className="w-full rounded-md border border-[hsl(var(--border))] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+                 value={formData.phone}
+                 onChange={(e) =>
+                   setFormData({ ...formData, phone: e.target.value })
+                 }
+               />
+             </div>
+           </div>
+     
+           {/* Postal Code */}
+           <div className="space-y-1">
+             <label className="text-xs text-[hsl(var(--muted-foreground))]">
+               کد پستی
+             </label>
+             <input
+               className="w-full rounded-md border border-[hsl(var(--border))] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+               value={formData.postalCode}
+               onChange={(e) =>
+                 setFormData({ ...formData, postalCode: e.target.value })
+               }
+             />
+           </div>
+     
+           {/* Address */}
+           <div className="space-y-1">
+             <label className="text-xs text-[hsl(var(--muted-foreground))]">
+               آدرس کامل
+             </label>
+             <textarea
+               rows={3}
+               className="w-full resize-none rounded-md border border-[hsl(var(--border))] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+               value={formData.addressLine}
+               onChange={(e) =>
+                 setFormData({ ...formData, addressLine: e.target.value })
+               }
+             />
+           </div>
+     
+           {/* Default checkbox */}
+           <label className="flex items-center gap-2 text-xs cursor-pointer">
+             <input
+               type="checkbox"
+               className="accent-[hsl(var(--primary))]"
+               checked={formData.isDefault}
+               onChange={(e) =>
+                 setFormData({ ...formData, isDefault: e.target.checked })
+               }
+             />
+             آدرس پیش‌فرض
+           </label>
+     
+           {/* Actions */}
+           <div className="flex justify-end gap-3 pt-3">
+             <button
+               type="button"
+               onClick={closeModal}
+               className="
+                 rounded-md
+                 border border-[hsl(var(--border))]
+                 px-4 py-2
+                 text-xs
+                 cursor-pointer
+                 hover:bg-[hsl(var(--muted))]
+               "
+             >
+               لغو
+             </button>
+     
+             <button
+               type="submit"
+               className="
+                 rounded-md
+                 bg-[hsl(var(--primary))]
+                 px-5 py-2
+                 text-xs
+                 text-white
+                 cursor-pointer
+                 transition
+                 hover:opacity-90
+               "
+             >
+               ذخیره
+             </button>
+           </div>
+         </form>
+       </motion.div>
+     </motion.div>
+     
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
