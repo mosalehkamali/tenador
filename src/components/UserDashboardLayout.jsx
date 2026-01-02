@@ -41,7 +41,7 @@ const UserDashboardLayout = ({ children }) => {
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
-      window.location.href = '/auth/login'
+      window.location.href = '/'
     } catch {
       toast.error('خطا در خروج')
     }
