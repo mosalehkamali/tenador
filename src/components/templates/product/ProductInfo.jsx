@@ -4,16 +4,19 @@ import ProductPrice from "./ProductPrice";
 import ProductVariants from "./ProductVariants";
 import AddToCartButton from "./AddToCartButton";
 import WishlistButton from "./WishlistButton";
+import { addToCart } from "@/lib/cart";
+import { toast } from "react-toastify";
 
 const ProductInfo = ({ product }) => {
 
   const productOptions = product.attributes.filter(
     attr => attr.type === "select"
   );
-  
-  
+
+
   const handleAddToCart = () => {
-    console.log("محصول به سبد خرید اضافه شد:", product.name);
+    addToCart(product, 1);
+    toast.success("به سبد خرید اضافه شد");
   };
 
   const handleWishlist = (isWishlisted) => {

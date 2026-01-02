@@ -114,7 +114,7 @@ const WishlistModule = () => {
             >
               <div className="relative">
                 <img
-                  src={item.images?.[0] || '/placeholder.jpg'}
+                  src={item.mainImage || '/placeholder.jpg'}
                   alt={item.name}
                   className="h-44 w-full object-cover"
                 />
@@ -138,7 +138,7 @@ const WishlistModule = () => {
                     {item.name}
                   </p>
                   <p className="mt-1 text-sm font-semibold text-[hsl(var(--primary))]">
-                    {item.price?.toLocaleString('fa-IR')} تومان
+                    {item.basePrice?.toLocaleString('fa-IR')} تومان
                   </p>
                 </div>
 

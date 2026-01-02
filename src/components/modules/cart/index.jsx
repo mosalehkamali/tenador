@@ -11,6 +11,7 @@ import {
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import Swal from 'sweetalert2'
+import { getCart, updateQuantity, removeFromCart } from '@/lib/cart'
 
 const CartModule = () => {
   const [cart, setCart] = useState([])
@@ -20,38 +21,18 @@ const CartModule = () => {
     fetchCart()
   }, [])
 
-  const fetchCart = async () => {
-    try {
-      const res = await fetch('/api/cart')
-      if (res.ok) {
-        const data = await res.json()
-        setCart(data.cart?.items || [])
-      } else {
-        toast.error('خطا در بارگذاری سبد خرید')
-      }
-    } catch {
-      toast.error('خطا در اتصال')
-    } finally {
-      setLoading(false)
-    }
+  const fetchCart = () => {
+    setCart(getCart())
+    setLoading(false)
   }
 
-  const updateQuantity = async (productId, newQuantity) => {
+  const handleUpdateQuantity = (productId, newQuantity) => {
     if (newQuantity < 1) return
-    try {
-      const res = await fetch('/api/cart', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, quantity: newQuantity }),
-      })
-      if (res.ok) fetchCart()
-      else toast.error('خطا در بروزرسانی')
-    } catch {
-      toast.error('خطا در اتصال')
-    }
+    updateQuantity(productId, newQuantity)
+    setCart(getCart())
   }
 
-  const removeFromCart = async (productId) => {
+  const handleRemoveFromCart = async (productId) => {
     const result = await Swal.fire({
       title: 'حذف از سبد خرید',
       text: 'آیا مطمئن هستید؟',
@@ -62,24 +43,14 @@ const CartModule = () => {
     })
 
     if (result.isConfirmed) {
-      try {
-        const res = await fetch('/api/cart', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId }),
-        })
-        if (res.ok) {
-          fetchCart()
-          toast.success('حذف شد')
-        } else toast.error('خطا در حذف')
-      } catch {
-        toast.error('خطا در اتصال')
-      }
+      removeFromCart(productId)
+      setCart(getCart())
+      toast.success('حذف شد')
     }
   }
 
   const totalAmount = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + item.product.basePrice * item.quantity,
     0
   )
 
@@ -114,6 +85,7 @@ const CartModule = () => {
         <div className="space-y-4">
           {/* Items */}
           {cart.map((item) => (
+            console.log(item),
             <motion.div
               key={item.product._id}
               initial={{ opacity: 0, scale: 0.96 }}
@@ -126,7 +98,7 @@ const CartModule = () => {
               "
             >
               <img
-                src={item.product.images?.[0] || '/placeholder.jpg'}
+                src={item.product.mainImage || '/placeholder.jpg'}
                 alt={item.product.name}
                 className="h-16 w-16 rounded-[var(--radius)] object-cover"
               />
@@ -136,7 +108,7 @@ const CartModule = () => {
                   {item.product.name}
                 </p>
                 <p className="text-xs text-[hsl(var(--foreground)/0.6)]">
-                  {item.price.toLocaleString('fa-IR')} تومان
+                  {item.product.basePrice.toLocaleString('fa-IR')} تومان
                 </p>
               </div>
 
@@ -144,7 +116,7 @@ const CartModule = () => {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() =>
-                    updateQuantity(item.product._id, item.quantity - 1)
+                    handleUpdateQuantity(item.product._id, item.quantity - 1)
                   }
                   className="rounded-[var(--radius)] border px-2 py-1 text-xs hover:bg-[hsl(var(--border)/0.5)]"
                 >
@@ -157,7 +129,7 @@ const CartModule = () => {
 
                 <button
                   onClick={() =>
-                    updateQuantity(item.product._id, item.quantity + 1)
+                    handleUpdateQuantity(item.product._id, item.quantity + 1)
                   }
                   className="rounded-[var(--radius)] border px-2 py-1 text-xs hover:bg-[hsl(var(--border)/0.5)]"
                 >
@@ -168,10 +140,10 @@ const CartModule = () => {
               {/* Price & remove */}
               <div className="text-left">
                 <p className="text-sm font-semibold text-[hsl(var(--primary))]">
-                  {(item.price * item.quantity).toLocaleString('fa-IR')}
+                  {(item.product.basePrice * item.quantity).toLocaleString('fa-IR')}
                 </p>
                 <button
-                  onClick={() => removeFromCart(item.product._id)}
+                  onClick={() => handleRemoveFromCart(item.product._id)}
                   className="mt-1 flex items-center gap-1 text-xs text-red-600 hover:underline"
                 >
                   <FaTrash />
