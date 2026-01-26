@@ -5,7 +5,7 @@ import AdminLayout from "@/components/admin/Layout"
 
 export const metadata = {
   title: 'فروشگاه ورزشی تنادور',
-  description: 'فروشگاه تخصصی محصولات تنیس، پدل، اسکواش، بدمینتون و پینگ‌پنگ',
+  description: 'پنل ادمین فروشگاه',
 };
 
 export default function RootLayout({ children }) {
