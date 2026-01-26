@@ -7,44 +7,49 @@ import Link from 'next/link';
 export default function AddBrand() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState({
+    logo: false,
+    image: false,
+  });
+
   const [formData, setFormData] = useState({
     name: '',
+    title: '',
     country: '',
     foundedYear: '',
     description: '',
     logo: '',
+    image: '',
   });
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+  /* ---------- upload ---------- */
+  const uploadImage = async (file, field) => {
     if (!file) return;
 
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('folder', 'brands');
+    setUploading((p) => ({ ...p, [field]: true }));
+
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('folder', 'brands');
 
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        body: fd,
       });
 
       const data = await res.json();
-      if (res.ok) {
-        setFormData((prev) => ({ ...prev, logo: data.url }));
-      } else {
-        alert(data.error || 'خطا در آپلود عکس');
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('خطا در آپلود عکس');
+      if (!res.ok) throw new Error(data.error);
+
+      setFormData((p) => ({ ...p, [field]: data.url }));
+    } catch (err) {
+      alert('آپلود تصویر ناموفق بود');
     } finally {
-      setUploading(false);
+      setUploading((p) => ({ ...p, [field]: false }));
     }
   };
 
+  /* ---------- submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -52,27 +57,23 @@ export default function AddBrand() {
     try {
       const payload = {
         ...formData,
-        foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : null,
+        foundedYear: formData.foundedYear
+          ? Number(formData.foundedYear)
+          : null,
       };
 
       const res = await fetch('/api/brands/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
 
-      if (res.ok) {
-        router.push('/p-admin/admin-brands');
-      } else {
-        alert(data.error || 'خطا در ایجاد برند');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('خطا در ایجاد برند');
+      router.push('/p-admin/admin-brands');
+    } catch {
+      alert('ذخیره برند انجام نشد');
     } finally {
       setLoading(false);
     }
@@ -80,128 +81,145 @@ export default function AddBrand() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link
-            href="/p-admin/admin-brands"
-            className="text-blue-600 hover:text-blue-800 mb-2 inline-block"
-          >
-            ← بازگشت به لیست برندها
+      <header className="bg-white border-b">
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          <Link href="/p-admin/admin-brands" className="text-blue-600">
+            ← بازگشت
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">افزودن برند جدید</h1>
+          <h1 className="text-2xl font-bold mt-2">افزودن برند</h1>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="bg-white rounded-lg shadow p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
+
+            {/* name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                نام برند <span className="text-red-500">*</span>
+              <label className="block mb-1 text-sm font-medium">
+                نام انگلیسی برند (name)
               </label>
               <input
-                type="text"
                 required
                 value={formData.name}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                  setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="مثال: نایک"
+                className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500"
               />
             </div>
 
+            {/* title */}
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                عنوان نمایشی برند (title)
+              </label>
+              <input
+                required
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            {/* country + year */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  کشور
-                </label>
+                <label className="block mb-1 text-sm font-medium">کشور</label>
                 <input
-                  type="text"
                   value={formData.country}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, country: e.target.value }))
+                    setFormData({ ...formData, country: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="مثال: آمریکا"
+                  className="w-full border rounded-lg px-4 py-2"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block mb-1 text-sm font-medium">
                   سال تأسیس
                 </label>
                 <input
                   type="number"
                   value={formData.foundedYear}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, foundedYear: e.target.value }))
+                    setFormData({
+                      ...formData,
+                      foundedYear: e.target.value,
+                    })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="مثال: 1964"
+                  className="w-full border rounded-lg px-4 py-2"
                 />
               </div>
             </div>
 
+            {/* description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                توضیحات
-              </label>
+              <label className="block mb-1 text-sm font-medium">توضیحات</label>
               <textarea
+                rows={4}
                 value={formData.description}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, description: e.target.value }))
+                  setFormData({
+                    ...formData,
+                    description: e.target.value,
+                  })
                 }
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="توضیحات برند..."
+                className="w-full border rounded-lg px-4 py-2"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                لوگو
-              </label>
-              <div className="space-y-4">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploading}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-                {uploading && (
-                  <p className="text-sm text-gray-500">در حال آپلود...</p>
-                )}
-                {formData.logo && (
-                  <div className="mt-4">
-                    <img
-                      src={formData.logo}
-                      alt="Preview"
-                      className="w-32 h-32 object-contain rounded-lg border border-gray-300 bg-white p-2"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* logo */}
+            <UploadField
+              label="لوگوی برند"
+              url={formData.logo}
+              loading={uploading.logo}
+              onSelect={(f) => uploadImage(f, 'logo')}
+            />
 
-            <div className="flex items-center gap-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'در حال ذخیره...' : 'ذخیره'}
-              </button>
-              <Link
-                href="/p-admin/admin-brands"
-                className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                انصراف
-              </Link>
-            </div>
+            {/* image */}
+            <UploadField
+              label="تصویر بنر برند"
+              url={formData.image}
+              loading={uploading.image}
+              onSelect={(f) => uploadImage(f, 'image')}
+            />
+
+            <button
+              disabled={loading}
+              className="bg-purple-600 text-white px-6 py-3 rounded-lg"
+            >
+              {loading ? 'در حال ذخیره…' : 'ذخیره برند'}
+            </button>
           </form>
         </div>
       </main>
+    </div>
+  );
+}
+
+/* ---------- upload field ---------- */
+function UploadField({ label, url, loading, onSelect }) {
+  return (
+    <div>
+      <label className="block mb-2 text-sm font-medium">{label}</label>
+      <label className="flex items-center justify-center h-40 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500">
+        {url ? (
+          <img src={url} className="max-h-32 object-contain" />
+        ) : (
+          <span className="text-gray-500">
+            {loading ? 'در حال آپلود…' : 'برای آپلود کلیک کنید'}
+          </span>
+        )}
+        <input
+          type="file"
+          hidden
+          accept="image/*"
+          disabled={loading}
+          onChange={(e) => onSelect(e.target.files[0])}
+        />
+      </label>
     </div>
   );
 }

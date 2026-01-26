@@ -5,8 +5,19 @@ const schema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
+      validate: {
+        validator: function(v) {
+          // بررسی اینکه فقط حروف انگلیسی و اعداد باشد
+          return /^[a-zA-Z0-9\s\-_]+$/.test(v);
+        },
+        message: 'نام باید فقط شامل حروف انگلیسی، اعداد، فاصله، خط تیره و زیرخط باشد'
+      }
+    },
+
+    title: {
+      type: String,
+      required: true,
     },
 
     description: {
@@ -15,6 +26,11 @@ const schema = new mongoose.Schema(
     },
 
     icon: {
+      type: String,
+      default: "",
+    },
+    
+    image: {
       type: String,
       default: "",
     },

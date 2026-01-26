@@ -9,8 +9,10 @@ export default function AddAthlete() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sports, setSports] = useState([]);
+
   const [formData, setFormData] = useState({
     name: '',
+    title: '',
     sport: '',
     birthDate: '',
     nationality: '',
@@ -18,49 +20,40 @@ export default function AddAthlete() {
     photo: '',
   });
 
+  /* ---------- fetch sports ---------- */
   useEffect(() => {
-    fetchSports();
+    fetch('/api/sports')
+      .then((res) => res.json())
+      .then((data) => setSports(data.sports || []))
+      .catch(() => {});
   }, []);
 
-  const fetchSports = async () => {
-    try {
-      const res = await fetch('/api/sports');
-      const data = await res.json();
-      setSports(data.sports || []);
-    } catch (error) {
-      console.error('Error fetching sports:', error);
-    }
-  };
-
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+  /* ---------- upload photo ---------- */
+  const handleImageUpload = async (file) => {
     if (!file) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('folder', 'athletes');
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('folder', 'athletes');
 
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        body: fd,
       });
-
       const data = await res.json();
-      if (res.ok) {
-        setFormData((prev) => ({ ...prev, photo: data.url }));
-      } else {
-        alert(data.error || 'خطا در آپلود عکس');
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('خطا در آپلود عکس');
+      if (!res.ok) throw new Error();
+
+      setFormData((p) => ({ ...p, photo: data.url }));
+    } catch {
+      alert('آپلود تصویر ناموفق بود');
     } finally {
       setUploading(false);
     }
   };
 
+  /* ---------- submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -73,22 +66,16 @@ export default function AddAthlete() {
 
       const res = await fetch('/api/athletes/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
 
-      if (res.ok) {
-        router.push('/p-admin/admin-athletes');
-      } else {
-        alert(data.error || 'خطا در ایجاد ورزشکار');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('خطا در ایجاد ورزشکار');
+      router.push('/p-admin/admin-athletes');
+    } catch (err) {
+      alert(err.message || 'خطا در ایجاد ورزشکار');
     } finally {
       setLoading(false);
     }
@@ -96,161 +83,152 @@ export default function AddAthlete() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link
-            href="/p-admin/admin-athletes"
-            className="text-blue-600 hover:text-blue-800 mb-2 inline-block"
-          >
-            ← بازگشت به لیست ورزشکاران
+      <header className="bg-white border-b">
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          <Link href="/p-admin/admin-athletes" className="text-blue-600">
+            ← بازگشت
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">افزودن ورزشکار جدید</h1>
+          <h1 className="text-2xl font-bold mt-2">افزودن ورزشکار</h1>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="bg-white rounded-lg shadow p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
+
+            {/* name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                نام ورزشکار <span className="text-red-500">*</span>
+              <label className="block mb-1 text-sm font-medium">
+                نام انگلیسی (name) *
               </label>
               <input
-                type="text"
                 required
                 value={formData.name}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                  setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="مثال: لیونل مسی"
+                className="w-full border rounded-lg px-4 py-2"
               />
             </div>
 
+            {/* title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ورزش <span className="text-red-500">*</span>
+              <label className="block mb-1 text-sm font-medium">
+                عنوان نمایشی (title) *
+              </label>
+              <input
+                required
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                className="w-full border rounded-lg px-4 py-2"
+              />
+            </div>
+
+            {/* sport */}
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                ورزش *
               </label>
               <select
                 required
                 value={formData.sport}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, sport: e.target.value }))
+                  setFormData({ ...formData, sport: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full border rounded-lg px-4 py-2"
               >
-                <option value="">انتخاب ورزش</option>
-                {sports.map((sport) => (
-                  <option key={sport._id} value={sport._id}>
-                    {sport.name}
+                <option value="">انتخاب کنید</option>
+                {sports.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.title || s.name}
                   </option>
                 ))}
               </select>
             </div>
 
+            {/* birth + nationality */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block mb-1 text-sm font-medium">
                   تاریخ تولد
                 </label>
                 <input
-                  type="date"
+                  type="text"
                   value={formData.birthDate}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, birthDate: e.target.value }))
+                    setFormData({ ...formData, birthDate: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full border rounded-lg px-4 py-2"
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block mb-1 text-sm font-medium">
                   ملیت
                 </label>
                 <input
-                  type="text"
                   value={formData.nationality}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, nationality: e.target.value }))
+                    setFormData({ ...formData, nationality: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="مثال: آرژانتین"
+                  className="w-full border rounded-lg px-4 py-2"
                 />
               </div>
             </div>
 
+            {/* bio */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block mb-1 text-sm font-medium">
                 بیوگرافی
               </label>
               <textarea
+                rows={4}
                 value={formData.bio}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, bio: e.target.value }))
+                  setFormData({ ...formData, bio: e.target.value })
                 }
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="بیوگرافی ورزشکار..."
+                className="w-full border rounded-lg px-4 py-2"
               />
             </div>
 
+            {/* photo */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                عکس
+              <label className="block mb-2 text-sm font-medium">
+                عکس ورزشکار
               </label>
-              <div className="space-y-4">
+              <label className="flex items-center justify-center h-40 border-2 border-dashed rounded-lg cursor-pointer hover:border-green-500">
+                {formData.photo ? (
+                  <img
+                    src={formData.photo}
+                    className="h-32 w-32 object-cover rounded-full"
+                  />
+                ) : (
+                  <span className="text-gray-500">
+                    {uploading ? 'در حال آپلود…' : 'برای آپلود کلیک کنید'}
+                  </span>
+                )}
                 <input
                   type="file"
+                  hidden
                   accept="image/*"
-                  onChange={handleImageUpload}
                   disabled={uploading}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  onChange={(e) => handleImageUpload(e.target.files[0])}
                 />
-                {uploading && (
-                  <p className="text-sm text-gray-500">در حال آپلود...</p>
-                )}
-                {formData.photo && (
-                  <div className="mt-4">
-                    <img
-                      src={formData.photo}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover rounded-full border border-gray-300"
-                    />
-                  </div>
-                )}
-              </div>
+              </label>
             </div>
 
-            <div className="flex items-center gap-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'در حال ذخیره...' : 'ذخیره'}
-              </button>
-              <Link
-                href="/p-admin/admin-athletes"
-                className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                انصراف
-              </Link>
-            </div>
+            <button
+              disabled={loading}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg"
+            >
+              {loading ? 'در حال ذخیره…' : 'ذخیره ورزشکار'}
+            </button>
+
           </form>
         </div>
       </main>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
