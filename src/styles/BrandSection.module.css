@@ -1,0 +1,113 @@
+.brandSection {
+    display: flex;
+    justify-content: flex-start; /* Align items for scrolling */
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 20vh;
+    overflow: hidden; /* Hide overflowing logos */
+    white-space: nowrap; /* Prevent wrapping */
+  }
+  
+  .brandTrack {
+    display: flex;
+    gap: 50px; /* Space between logos */
+    animation: autoScroll 20s linear infinite; /* Continuous scrolling animation */
+    transition: animation-play-state 0.3s ease; /* Smooth transition for hover pause */
+  }
+  
+  .brandSection:hover .brandTrack {
+    animation-play-state: paused; /* Pause animation on hover */
+  }
+  
+  .brandLogo {
+    width: 170px; /* Maintain logo width */
+    height: 170px; /* Maintain logo height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    
+    overflow: hidden; /* Ensure the image fits inside the circle */
+    transition: transform 0.3s ease; /* Smooth transform on hover */
+    flex-shrink: 0; /* Prevent logos from shrinking */
+  }
+  
+  .brandLogo:hover {
+    transform: scale(1.1); /* Slightly enlarge on hover */
+  }
+  
+  .logoImage {
+    width: 100%; /* Keep the image proportional */
+    height: 100%;
+    object-fit: contain; /* Ensure the image fits nicely inside */
+    filter: grayscale(100%) sepia(100%) hue-rotate(-30deg) saturate(500%) brightness(80%);
+    /* Tint logos with #AA4725 */
+    animation: neonFlash 2s infinite; /* Apply neon flash animation */
+    transition: filter 0.3s ease; /* Smooth transition for hover effect */
+  }
+  
+  .brandLogo:hover .logoImage {
+    filter: none; /* Restore original colors */
+    animation: none; /* Stop animation on hover */
+  }
+  
+  
+  /* Keyframes for scrolling animation */
+  @keyframes autoScroll {
+    0% {
+      transform: translateX(0); /* Start position */
+    }
+    100% {
+      transform: translateX(-50%); /* End position */
+    }
+  }
+  
+  /* Neon flash animation for logos */
+  @keyframes flash {
+    0%, 100% {
+      opacity: 0.1;
+      text-shadow: 0 0 5px #AA4725, 0 0 10px #AA4725, 0 0 15px #AA4725, 0 0 20px #AA4725;
+    }
+    50% {
+      opacity: 1;
+      text-shadow: 0 0 10px #AA4725, 0 0 20px #AA4725, 0 0 30px #AA4725, 0 0 40px #AA4725;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .brandSection {
+      height: 15vh;
+    }
+  
+    .brandLogo {
+      width: 150px; /* Smaller logos for tablets */
+      height: 150px;
+    }
+  
+    .brandTrack {
+      gap: 30px; /* Reduce gap for smaller screens */
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .brandSection {
+      height: 10vh;
+    }
+  
+    .brandLogo {
+      width: 100px; /* Smallest size for mobile */
+      height: 100px;
+    }
+  
+    .logoImage {
+      width: 90%; /* Slightly smaller image inside container */
+      height: 90%;
+    }
+  
+    .brandTrack {
+      gap: 20px; /* Reduce gap further for very small screens */
+    }
+  }
+  

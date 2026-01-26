@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
+  <defs>
+    <filter id="drop-shadow-2" filterUnits="userSpaceOnUse">
+      <feOffset dx="15" dy="15"/>
+      <feGaussianBlur result="blur" stdDeviation="20"/>
+      <feFlood flood-color="#000" flood-opacity=".85"/>
+      <feComposite in2="blur" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="drop-shadow-3" filterUnits="userSpaceOnUse">
+      <feOffset dx="15" dy="15"/>
+      <feGaussianBlur result="blur-2" stdDeviation="20"/>
+      <feFlood flood-color="#000" flood-opacity=".85"/>
+      <feComposite in2="blur-2" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <path d="M9.48,6.36c.11.49-.28.57-.6.69-1.73.69-3.17,1.83-4.04,3.43-1.17,2.17-1.17,4.33,1.39,6.32.27.21.56.4.84.61-.04.08-.07.15-.11.23-.49-.09-.99-.15-1.47-.29-1.6-.45-3.17-.97-4.37-2.21-1.54-1.58-1.52-3.85.1-5.35,1.63-1.49,3.65-2.25,5.73-2.87.78-.23,1.59-.38,2.39-.57.04,0,.09,0,.13,0Z" fill="#d9251a"/>
+  <path d="M18.47,8.13c-.98,1.11-2.05,2.06-3.3,2.79-.71.42-1.45.79-2.2,1.11-1.74.74-3.52,1.27-5.45.89-1.02-.2-1.36-.7-.97-1.67.21-.52.56-1.01.93-1.44.67-.76,1.39-1.5,2.14-2.19.72-.66,1.67-.71,2.58-.93,1.1-.27,2.11-.11,3.15.05,1.14.18,2.15.69,3.13,1.39Z" fill="#d9251a"/>
+  <path d="M6.33,13.83c.73.13,1.28.24,1.83.31.52.07,1.05.2,1.56.13,1.71-.22,3.29-.81,4.75-1.86.34,1.79,1.76,1.97,3.09,2.16,1.04.15,2.11.17,3.17.13.79-.03,1.57-.27,2.35-.39.28-.04.58,0,.87,0,.01.08.02.16.03.23-.39.16-.77.33-1.17.47-1.7.6-3.37,1.31-5.11,1.75-2.57.65-5.2.84-7.84.34-1.21-.23-2.2-.83-2.94-1.78-.27-.34-.35-.83-.61-1.5Z" fill="#d9251b"/>
+</svg>
