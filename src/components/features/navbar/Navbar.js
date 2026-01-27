@@ -8,9 +8,10 @@ import IconButton from '@/components/ui/IconButton';
 import Button from '@/components/ui/Button';
 import { SPORTS_CATEGORIES, BRANDS, NAVIGATION_ITEMS } from '@/lib/constants';
 import Image from 'next/image';
+import Link from 'next/link';
 
-export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+export default function Navbar({user}) {
+  const [isLoggedIn, setIsLoggedIn] = useState(user);
   const [cartCount, setCartCount] = useState(3);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -51,15 +52,19 @@ export default function Navbar() {
               {/* Auth & Cart */}
               <div className="flex items-center gap-3">
                 {isLoggedIn ? (
+                  <Link href={"/p-user"}>
                   <Button className="flex items-center gap-1 rounded-[var(--radius)] cursor-pointer" variant="outline" size="sm">
                     <FiUser className="ml-2" />
                     ورود به داشبورد
                   </Button>
+                  </Link>
                 ) : (
+                  <Link href={"/login-register"}>
                   <Button className="flex items-center gap-1 rounded-[var(--radius)] cursor-pointer" variant="outline" size="sm">
                     <FiUser className="ml-2" />
                     ورود | ثبت‌نام
                   </Button>
+                  </Link>
                 )}
                 
                 <div className="relative">
