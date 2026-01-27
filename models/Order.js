@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const OrderSchema = new mongoose.Schema(
   {
+    trackingCode: {
+      type: String,
+      unique: true,
+      index: true,
+    },
+
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -43,10 +49,26 @@ const OrderSchema = new mongoose.Schema(
       default: "WAITING",
     },
 
+    // 🔥 آدرس منعطف
     address: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Address",
-      required: true,
+      ref: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Address",
+        default: null,
+      },
+      snapshot: {
+        fullName: String,
+        phone: String,
+        province: String,
+        city: String,
+        postalCode: String,
+        fullAddress: String,
+      },
+    },
+
+    orderDate: {
+      type: Date,
+      default: Date.now,
     },
 
     description: String,
@@ -54,11 +76,38 @@ const OrderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// تعداد آیتم‌ها
 OrderSchema.virtual("itemsCount").get(function () {
   return this.items.reduce((sum, i) => sum + i.quantity, 0);
 });
 
 OrderSchema.set("toJSON", { virtuals: true });
 OrderSchema.set("toObject", { virtuals: true });
+
+// تولید کد رهگیری
+function generateTrackingCode(date = new Date()) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+
+  const datePart = `${yyyy}${mm}${dd}`;
+
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const letterPart =
+    letters[Math.floor(Math.random() * 26)] +
+    letters[Math.floor(Math.random() * 26)];
+
+  const numberPart = String(Math.floor(Math.random() * 1000)).padStart(3, "0");
+
+  return `${datePart}${letterPart}${numberPart}`;
+}
+
+OrderSchema.pre("save", function (next) {
+  if (!this.trackingCode) {
+    this.trackingCode = generateTrackingCode(this.orderDate);
+  }
+  next();
+});
+
 
 export default mongoose.models.Order || mongoose.model("Order", OrderSchema);
