@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { FiSearch, FiShoppingCart, FiUser, FiMenu, FiX } from 'react-icons/fi';
 import { HiOutlineViewGrid } from 'react-icons/hi';
 import Input from '@/components/ui/Input';
@@ -9,18 +9,27 @@ import Button from '@/components/ui/Button';
 import { SPORTS_CATEGORIES, BRANDS, NAVIGATION_ITEMS } from '@/lib/constants';
 import Image from 'next/image';
 import Link from 'next/link';
+import CartDrawer from '@/components/features/cartDrawer/CartDrawer';
 
-export default function Navbar({user}) {
+export default function Navbar({ user }) {
   const [isLoggedIn, setIsLoggedIn] = useState(user);
   const [cartCount, setCartCount] = useState(3);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openCart, setOpenCart] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [hoveredSport, setHoveredSport] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  useEffect(() => {
+    const stored = localStorage.getItem('cart');
+    const items = stored ? JSON.parse(stored) : []
+    const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
+    setCartCount(totalItems)  
+  },[openCart])
+
   const handleCategoryToggle = () => {
     setIsCategoryOpen(!isCategoryOpen);
   };
+
 
   return (
     <>
@@ -33,14 +42,14 @@ export default function Navbar({user}) {
               {/* Logo */}
               <div className="flex-shrink-0">
                 <a href="/" className="text-2xl font-bold hover:text-[#ffbf00] transition-colors">
-                <Image src="/logo/logo.svg" alt="logo" width={100} height={100} />
+                  <Image src="/logo/logo.svg" alt="logo" width={100} height={100} />
                 </a>
               </div>
 
               {/* Search Bar */}
               <div className="flex-grow max-w-2xl">
                 <Input
-                className='rounded-[var(--radius)] text-[--color-text)]'
+                  className='rounded-[var(--radius)] text-[--color-text)]'
                   type="search"
                   placeholder="جستجو در محصولات..."
                   value={searchQuery}
@@ -53,21 +62,21 @@ export default function Navbar({user}) {
               <div className="flex items-center gap-3">
                 {isLoggedIn ? (
                   <Link href={"/p-user"}>
-                  <Button className="flex items-center gap-1 rounded-[var(--radius)] cursor-pointer" variant="outline" size="sm">
-                    <FiUser className="ml-2" />
-                    ورود به داشبورد
-                  </Button>
+                    <Button className="flex items-center gap-1 rounded-[var(--radius)] cursor-pointer" variant="outline" size="sm">
+                      <FiUser className="ml-2" />
+                      ورود به داشبورد
+                    </Button>
                   </Link>
                 ) : (
                   <Link href={"/login-register"}>
-                  <Button className="flex items-center gap-1 rounded-[var(--radius)] cursor-pointer" variant="outline" size="sm">
-                    <FiUser className="ml-2" />
-                    ورود | ثبت‌نام
-                  </Button>
+                    <Button className="flex items-center gap-1 rounded-[var(--radius)] cursor-pointer" variant="outline" size="sm">
+                      <FiUser className="ml-2" />
+                      ورود | ثبت‌نام
+                    </Button>
                   </Link>
                 )}
-                
-                <div className="relative">
+
+                <div className="relative" onClick={() => setOpenCart(true)}>
                   <IconButton variant="default">
                     <FiShoppingCart className='text-[var(--color-text)] cursor-pointer' size={24} />
                     {cartCount > 0 && (
@@ -113,11 +122,10 @@ export default function Navbar({user}) {
                               <li key={sport.id}>
                                 <a
                                   href={`/category/${sport.slug}`}
-                                  className={`block rounded-[var(--radius)] px-4 py-3 transition-all ${
-                                    hoveredSport === sport.slug
+                                  className={`block rounded-[var(--radius)] px-4 py-3 transition-all ${hoveredSport === sport.slug
                                       ? 'bg-[#aa4725] text-white'
                                       : 'text-black hover:bg-white/5'
-                                  }`}
+                                    }`}
                                   onMouseEnter={() => setHoveredSport(sport.slug)}
                                 >
                                   {sport.name}
@@ -179,8 +187,8 @@ export default function Navbar({user}) {
             <div className="flex items-center justify-between gap-3">
               {/* Logo */}
               <div className="flex-shrink-0">
-              <a href="/" className="text-2xl font-bold text-[#aa4725] hover:text-[#ffbf00] transition-colors">
-                <Image src="/logo/logo.svg" alt="logo" width={100} height={100} />
+                <a href="/" className="text-2xl font-bold text-[#aa4725] hover:text-[#ffbf00] transition-colors">
+                  <Image src="/logo/logo.svg" alt="logo" width={100} height={100} />
                 </a>
               </div>
 
@@ -197,7 +205,7 @@ export default function Navbar({user}) {
               </div>
 
               {/* Cart */}
-              <div className="relative">
+              <div className="relative" onClick={() => setOpenCart(true)}>
                 <IconButton variant="primary">
                   <FiShoppingCart size={22} />
                   {cartCount > 0 && (
@@ -211,7 +219,11 @@ export default function Navbar({user}) {
           </div>
         </div>
       </nav>
-        <div className='h-[120px] lg:h-[140px]'></div>
+      <div className='h-[120px] lg:h-[140px]'></div>
+              <CartDrawer
+                isOpen={openCart}
+                onClose={() => setOpenCart(false)}
+              />
     </>
   );
 }
