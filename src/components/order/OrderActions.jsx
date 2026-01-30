@@ -12,6 +12,7 @@ const OrderActions = ({
   discountCode,
   onSuccess
 }) => {
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [description, setDescription] = useState('');
 
@@ -33,9 +34,9 @@ const OrderActions = ({
 
   const handleSubmitOrder = async () => {
     if (!validateOrder()) return;
-
+  
     const result = await Swal.fire({
-      title: 'تایید ثبت سفارش',
+      title: "تایید ثبت سفارش",
       html: `
         <div style="text-align:right;direction:rtl">
           <p>آیا از ثبت سفارش اطمینان دارید؟</p>
@@ -47,29 +48,66 @@ const OrderActions = ({
           </p>
         </div>
       `,
-      icon: 'question',
+      icon: "question",
       showCancelButton: true,
-      confirmButtonText: 'بله، ثبت شود',
-      cancelButtonText: 'انصراف',
-      confirmButtonColor: '#4f46e5',
-      cancelButtonColor: '#9ca3af',
+      confirmButtonText: "بله، ثبت شود",
+      cancelButtonText: "انصراف",
+      confirmButtonColor: "#4f46e5",
+      cancelButtonColor: "#9ca3af",
       reverseButtons: true,
     });
-
+  
     if (!result.isConfirmed) return;
-
+  
     setIsSubmitting(true);
-
+  
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      onSuccess(`ORD-${Date.now()}`);
-    } catch {
-      toast.error('خطا در ثبت سفارش');
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        credentials: "include", // مهم برای ارسال کوکی
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items: cartItems.map((item) => ({
+            product: item.productId,
+            quantity: item.quantity,
+            price: item.product.price.finalPrice,
+          })),
+          totalPrice,
+          paymentMethod:selectedPaymentMethod,
+          addressId: selectedAddress._id,
+          description,
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        throw new Error(data.message || "خطا در ثبت سفارش");
+      }
+  
+      // اگر پرداخت آنلاین بود میتونی اینجا ریدایرکت بزنی
+      if (selectedPaymentMethod  === "ONLINE") {
+        // window.location.href = data.paymentUrl
+      }
+  
+      toast.success("سفارش با موفقیت ثبت شد");
+      
+      // پاک کردن سبد خرید
+      localStorage.removeItem("cart");
+  
+      // ارسال کد رهگیری به والد
+      onSuccess(data.order.trackingCode);
+  
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "خطا در ثبت سفارش");
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   const isReady =
     cartItems.length > 0 &&
     selectedAddress &&

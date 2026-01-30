@@ -41,7 +41,7 @@ const OrderPage = () => {
   const handleOrderSuccess = (orderId) => {
     console.log('Order placed:', orderId);
     localStorage.removeItem('cart');
-    window.location.reload();
+    window.location.replace(`/p-user/payment/${orderId}`);
   };
 
   return (

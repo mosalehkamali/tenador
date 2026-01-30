@@ -102,11 +102,10 @@ function generateTrackingCode(date = new Date()) {
   return `${datePart}${letterPart}${numberPart}`;
 }
 
-OrderSchema.pre("save", function (next) {
+OrderSchema.pre("save", function () {
   if (!this.trackingCode) {
     this.trackingCode = generateTrackingCode(this.orderDate);
   }
-  next();
 });
 
 
