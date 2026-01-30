@@ -78,6 +78,7 @@ const AddressModal = ({
     }
 
     setIsSubmitting(false);
+    onClose();
   };
 
   const handleSelectAndClose = (address) => {
@@ -124,11 +125,11 @@ const AddressModal = ({
               ) : addresses.length > 0 ? (
                 <div className="space-y-3">
                   {addresses.map((address) => {
-                    const selected = selectedAddress?.id === address.id;
+                    const selected = selectedAddress?._id === address._id;
 
                     return (
                       <div
-                        key={address.id}
+                        key={address._id}
                         onClick={() => handleSelectAndClose(address)}
                         className={`
                           relative cursor-pointer rounded-[6px] border p-4 transition
@@ -204,10 +205,117 @@ const AddressModal = ({
                 ← بازگشت به لیست آدرس‌ها
               </button>
 
-              {/* فرم دقیقاً همون فرم قبلیه فقط rely روی input-field */}
-              {/* چون input-field از قبل داری، همون حفظ شده */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              {/* ... فرم بدون تغییر منطقی ... */}
+                {/* عنوان آدرس */}
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">عنوان آدرس</label>
+                  <div className="relative">
+                    <FiHome className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="مثلاً خانه"
+                      value={formData.title}
+                      onChange={(e) =>
+                        handleInputChange('title', e.target.value)
+                      }
+                      className="w-full border border-gray-300 rounded-[6px] py-2.5 pr-9 pl-3 text-sm focus:outline-none focus:border-[#aa4725] focus:ring-2 focus:ring-[#aa4725]/20 transition"
+                    />
+                  </div>
+                </div>
+
+                {/* نام */}
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">نام و نام خانوادگی</label>
+                  <div className="relative">
+                    <FiUser className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="نام تحویل گیرنده"
+                      value={formData.fullName}
+                      onChange={(e) =>
+                        handleInputChange('fullName', e.target.value)
+                      }
+                      className="w-full border border-gray-300 rounded-[6px] py-2.5 pr-9 pl-3 text-sm focus:outline-none focus:border-[#aa4725] focus:ring-2 focus:ring-[#aa4725]/20 transition"
+                    />
+                  </div>
+                </div>
+
+                {/* موبایل */}
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">شماره موبایل</label>
+                  <div className="relative">
+                    <FiPhone className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="tel"
+                      placeholder="09xxxxxxxxx"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        handleInputChange('phone', e.target.value)
+                      }
+                      className="w-full border border-gray-300 rounded-[6px] py-2.5 pr-9 pl-3 text-sm focus:outline-none focus:border-[#aa4725] focus:ring-2 focus:ring-[#aa4725]/20 transition"
+                    />
+                  </div>
+                </div>
+
+                {/* شهر */}
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">شهر</label>
+                  <div className="relative">
+                    <FiMapPin className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="نام شهر"
+                      value={formData.city}
+                      onChange={(e) =>
+                        handleInputChange('city', e.target.value)
+                      }
+                      className="w-full border border-gray-300 rounded-[6px] py-2.5 pr-9 pl-3 text-sm focus:outline-none focus:border-[#aa4725] focus:ring-2 focus:ring-[#aa4725]/20 transition"
+                    />
+                  </div>
+                </div>
+
+              </div>
+
+              {/* کد پستی */}
+              <div className="space-y-1">
+                <label className="text-xs text-gray-500">کد پستی</label>
+                <input
+                  type="text"
+                  placeholder="۱۰ رقم"
+                  value={formData.postalCode}
+                  onChange={(e) =>
+                    handleInputChange('postalCode', e.target.value)
+                  }
+                  className="w-full border border-gray-300 rounded-[6px] py-2.5 px-3 text-sm focus:outline-none focus:border-[#aa4725] focus:ring-2 focus:ring-[#aa4725]/20 transition"
+                />
+              </div>
+
+              {/* آدرس کامل */}
+              <div className="space-y-1">
+                <label className="text-xs text-gray-500">آدرس کامل</label>
+                <textarea
+                  rows={3}
+                  placeholder="خیابان، کوچه، پلاک، واحد ..."
+                  value={formData.addressLine}
+                  onChange={(e) =>
+                    handleInputChange('addressLine', e.target.value)
+                  }
+                  className="w-full border border-gray-300 rounded-[6px] py-2.5 px-3 text-sm resize-none focus:outline-none focus:border-[#aa4725] focus:ring-2 focus:ring-[#aa4725]/20 transition"
+                />
+              </div>
+
+
+              {/* ذخیره آدرس */}
+              <label className="flex items-center gap-2 text-sm text-gray-600 mt-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={saveAddress}
+                  onChange={(e) => setSaveAddress(e.target.checked)}
+                  className="w-4 h-4 accent-[#aa4725] cursor-pointer"
+                />
+                ذخیره این آدرس در حساب کاربری
+              </label>
 
               <button
                 type="submit"

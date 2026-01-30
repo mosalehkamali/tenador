@@ -2,7 +2,6 @@ import { FiPlus, FiMinus, FiTrash2 } from 'react-icons/fi';
 import { formatPriceWithCurrency } from 'base/utils/formatters';
 
 const CartItems = ({ items, onUpdateQuantity, onRemoveItem, isLoading }) => {
-  console.log(items);
   
   if (isLoading) {
     return (

@@ -14,6 +14,7 @@ import OrderActions from '@/components/order/OrderActions';
 
 import { useCart } from '@/hooks/useCart';
 import { useAddresses } from '@/hooks/useAddresses';
+import Link from 'next/link';
 
 const OrderPage = () => {
 
@@ -68,12 +69,12 @@ const OrderPage = () => {
         <div className="container py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 px-5">
-              <button
+              <Link href={'/p-user'}
                 className="p-2 rounded-md hover:bg-gray-100 transition-colors"
                 aria-label="بازگشت"
               >
                 <FiArrowRight className="w-5 h-5 text-[#0d0d0d]" />
-              </button>
+              </Link>
 
               <h1 className="flex items-center gap-2 text-lg md:text-xl font-bold text-[#0d0d0d]">
                 <FiShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-[#aa4725]" />

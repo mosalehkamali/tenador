@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
 import connectToDB from "base/configs/db";
 import Address from "base/models/Address";
+import { cookies } from 'next/headers';
+import { verifyToken } from "base/utils/auth";
 
 export async function GET(req) {
   try {
     await connectToDB();
-    const addresses = await Address.find({}).populate('user');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('accessToken')?.value;
+    
+    const user = verifyToken(token)
+    
+    const addresses = await Address.find({
+      user: user.userId
+    }).select('-__v');
     return NextResponse.json({ addresses });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -15,6 +24,11 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     await connectToDB();
+    const cookieStore = await cookies();
+    const token = cookieStore.get('accessToken')?.value;
+    
+    const userAuth = verifyToken(token)
+
     const body = await req.json();
     const { user, title, fullName, phone, city, addressLine, postalCode, isDefault } = body;
 
@@ -31,7 +45,7 @@ export async function POST(req) {
     }
 
     const newAddress = new Address({
-      user,
+      user:userAuth.userId,
       title: title.trim(),
       fullName: fullName.trim(),
       phone,
@@ -44,6 +58,7 @@ export async function POST(req) {
     await newAddress.save();
     return NextResponse.json({ address: newAddress }, { status: 201 });
   } catch (error) {
+    console.log(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

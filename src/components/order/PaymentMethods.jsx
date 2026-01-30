@@ -16,7 +16,7 @@ const paymentOptions = [
   {
     method: 'INSTALLMENT',
     title: 'پرداخت اقساطی',
-    description: 'پرداخت در چند قسط بدون سود',
+    description: 'پرداخت در چند قسط با چک',
     icon: 'calendar'
   }
 ];
