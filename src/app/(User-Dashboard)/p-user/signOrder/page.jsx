@@ -1,0 +1,177 @@
+"use client"
+
+import { useState } from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { FiShoppingCart, FiArrowRight } from 'react-icons/fi';
+
+import CartItems from '@/components/order/CartItems';
+import CartSummary from '@/components/order/CartSummary';
+import AddressSelector from '@/components/order/AddressSelector';
+import AddressModal from '@/components/order/AddressModal';
+import PaymentMethods from '@/components/order/PaymentMethods';
+import OrderActions from '@/components/order/OrderActions';
+
+import { useCart } from '@/hooks/useCart';
+import { useAddresses } from '@/hooks/useAddresses';
+
+const OrderPage = () => {
+
+  const {
+    cartItems,
+    isLoading: isCartLoading,
+    updateQuantity,
+    removeItem,
+    totalItems,
+    totalPrice,
+  } = useCart();
+
+  const {
+    addresses,
+    isLoading: isAddressLoading,
+    addAddress,
+  } = useAddresses();
+
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [discountCode, setDiscountCode] = useState('');
+
+  const handleOrderSuccess = (orderId) => {
+    console.log('Order placed:', orderId);
+    localStorage.removeItem('cart');
+    window.location.reload();
+  };
+
+  return (
+    <div className="min-h-screen bg-[#ffffff]" dir="rtl">
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        rtl
+        theme="light"
+        toastClassName="font-vazir"
+      />
+
+      <AddressModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        addresses={addresses}
+        selectedAddress={selectedAddress}
+        onSelectAddress={setSelectedAddress}
+        onAddAddress={addAddress}
+        isLoading={isAddressLoading}
+      />
+
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
+        <div className="container py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 px-5">
+              <button
+                className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+                aria-label="بازگشت"
+              >
+                <FiArrowRight className="w-5 h-5 text-[#0d0d0d]" />
+              </button>
+
+              <h1 className="flex items-center gap-2 text-lg md:text-xl font-bold text-[#0d0d0d]">
+                <FiShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-[#aa4725]" />
+                ثبت سفارش
+              </h1>
+            </div>
+
+            {totalItems > 0 && (
+              <div className="
+                px-3 py-1
+                rounded-full
+                text-sm
+                font-medium
+                bg-[#ffbf00]/20
+                text-[#aa4725]
+              ">
+                {totalItems} کالا
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Main */}
+      <main className="container py-6 md:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+          
+          {/* Left */}
+          <div className="lg:col-span-2 space-y-8">
+            <section className="space-y-4">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-[#0d0d0d] px-5">
+                <FiShoppingCart className="w-5 h-5 text-[#aa4725]" />
+                سبد خرید شما
+              </h2>
+
+              <div className="bg-white border border-gray-200 rounded-[6px] p-4 md:p-6">
+                <CartItems
+                  items={cartItems}
+                  onUpdateQuantity={updateQuantity}
+                  onRemoveItem={removeItem}
+                  isLoading={isCartLoading}
+                />
+              </div>
+            </section>
+
+            <AddressSelector
+              selectedAddress={selectedAddress}
+              onOpenModal={() => setIsAddressModalOpen(true)}
+            />
+
+            <PaymentMethods
+              selectedMethod={selectedPaymentMethod}
+              onSelectMethod={setSelectedPaymentMethod}
+            />
+          </div>
+
+          {/* Right / Summary */}
+          <div className="space-y-6">
+            <div className="lg:sticky lg:top-28 space-y-6">
+              <div className="bg-white border border-gray-200 rounded-[6px] p-4 md:p-6">
+                <CartSummary
+                  totalItems={totalItems}
+                  totalPrice={totalPrice}
+                  discountCode={discountCode}
+                  onDiscountCodeChange={setDiscountCode}
+                />
+              </div>
+
+              <OrderActions
+                cartItems={cartItems}
+                totalPrice={totalPrice}
+                selectedAddress={selectedAddress}
+                selectedPaymentMethod={selectedPaymentMethod}
+                discountCode={discountCode}
+                onSuccess={handleOrderSuccess}
+              />
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-white mt-12">
+        <div className="container py-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-sm text-gray-500">
+            <div className="flex items-center px-5 gap-4">
+              <a href="#" className="hover:text-[#aa4725] transition-colors">
+                قوانین و مقررات
+              </a>
+              <a href="#" className="hover:text-[#aa4725] transition-colors">
+                پشتیبانی
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default OrderPage;

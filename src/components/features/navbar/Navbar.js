@@ -1,6 +1,6 @@
 'use client';
 
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiSearch, FiShoppingCart, FiUser, FiMenu, FiX } from 'react-icons/fi';
 import { HiOutlineViewGrid } from 'react-icons/hi';
 import Input from '@/components/ui/Input';
@@ -23,8 +23,8 @@ export default function Navbar({ user }) {
     const stored = localStorage.getItem('cart');
     const items = stored ? JSON.parse(stored) : []
     const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-    setCartCount(totalItems)  
-  },[openCart])
+    setCartCount(totalItems)
+  }, [openCart])
 
   const handleCategoryToggle = () => {
     setIsCategoryOpen(!isCategoryOpen);
@@ -123,8 +123,8 @@ export default function Navbar({ user }) {
                                 <a
                                   href={`/category/${sport.slug}`}
                                   className={`block rounded-[var(--radius)] px-4 py-3 transition-all ${hoveredSport === sport.slug
-                                      ? 'bg-[#aa4725] text-white'
-                                      : 'text-black hover:bg-white/5'
+                                    ? 'bg-[#aa4725] text-white'
+                                    : 'text-black hover:bg-white/5'
                                     }`}
                                   onMouseEnter={() => setHoveredSport(sport.slug)}
                                 >
@@ -220,10 +220,10 @@ export default function Navbar({ user }) {
         </div>
       </nav>
       <div className='h-[120px] lg:h-[140px]'></div>
-              <CartDrawer
-                isOpen={openCart}
-                onClose={() => setOpenCart(false)}
-              />
+      <CartDrawer
+        isOpen={openCart}
+        onClose={() => setOpenCart(false)}
+      />
     </>
   );
 }

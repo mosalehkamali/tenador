@@ -1,6 +1,9 @@
 // app/api/product/[productId]/route.js
 import connectToDB from "base/configs/db";
 import Product from "base/models/Product";
+import Brand from "base/models/Brand";
+import Sport from "base/models/Sport";
+import Athlete from "base/models/Athlete";
 import Category from "base/models/Category";
 import PriceCache from "base/models/PriceCache";
 import { NextResponse } from "next/server";
@@ -42,32 +45,27 @@ const REDIS_PREFIX = "pricecache:product:";
 export async function GET(req, { params }) {
   try {
     await connectToDB();
-    const resolvedParams = await params();
+    const resolvedParams = await params;
     const productId = resolvedParams.productId || resolvedParams.id;
-    const rKey = `${REDIS_PREFIX}${productId}`;
-    // const cached = await redis.get(rKey);
+    
     const product = await Product.findById(productId)
-      .populate('brand')
-      .populate('sport')
-      .populate('athlete')
-      .populate('category')
-      .lean();
+    .populate('brand')
+    .populate('sport')
+    .populate('athlete')
+    .populate('category')
+    .lean();
     
     if (!product) {
       return NextResponse.json({ error: "محصول پیدا نشد" }, { status: 404 });
     }
-
-    if (cached) {
-      return NextResponse.json({ product, price: JSON.parse(cached) });
-    }
-
+    
     // fallback to DB cache
     const priceDoc = await PriceCache.findOne({ productId }).lean();
     const price = priceDoc || { finalPrice: product.basePrice, bestDiscount: 0 };
-    // optionally warm redis
-    // await redis.set(rKey, JSON.stringify(price), "EX", parseInt(process.env.PRICE_CACHE_TTL || "300", 10));
+    
     return NextResponse.json({ product, price });
   } catch (err) {
+    console.log(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
