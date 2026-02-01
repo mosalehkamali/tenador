@@ -38,14 +38,14 @@ const OrderPage = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [discountCode, setDiscountCode] = useState('');
 
-  const handleOrderSuccess = (orderId) => {
-    console.log('Order placed:', orderId);
+  const handleOrderSuccess = (trackingCode) => {
+    console.log('Order placed:', trackingCode);
     localStorage.removeItem('cart');
-    window.location.replace(`/p-user/payment/${orderId}`);
+    window.location.replace(`/p-user/payments/${trackingCode}`);
   };
 
   return (
-    <div className="min-h-screen bg-[#ffffff]" dir="rtl">
+    <div className="min-h-screen bg-gray-50" dir="rtl">
       <ToastContainer
         position="top-center"
         autoClose={3000}
@@ -99,18 +99,18 @@ const OrderPage = () => {
       </header>
 
       {/* Main */}
-      <main className="container py-6 md:py-10">
+      <main className="container py-6 md:py-10 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           
           {/* Left */}
           <div className="lg:col-span-2 space-y-8">
             <section className="space-y-4">
-              <h2 className="flex items-center gap-2 text-base font-semibold text-[#0d0d0d] px-5">
+
+              <div className="bg-white border border-gray-200 rounded-[6px] p-4 md:p-6">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-[#0d0d0d] mb-4">
                 <FiShoppingCart className="w-5 h-5 text-[#aa4725]" />
                 سبد خرید شما
               </h2>
-
-              <div className="bg-white border border-gray-200 rounded-[6px] p-4 md:p-6">
                 <CartItems
                   items={cartItems}
                   onUpdateQuantity={updateQuantity}

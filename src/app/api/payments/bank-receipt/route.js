@@ -1,45 +1,144 @@
-import { verifyToken } from 'base/utils/auth.js';
-import Payment from 'base/models/Payment.js';
-import Order from 'base/models/Order.js';
+import { NextResponse } from "next/server";
+import connectToDB from "base/configs/db";
+import { verifyToken } from "base/utils/auth";
+import { cookies } from "next/headers";
+import Order from "base/models/Order";
+import Payment from "base/models/Payment";
 
+/* =========================
+   Helper: Get User From Token
+========================= */
+async function getUserFromToken() {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("accessToken")?.value;
+  
+    if (!token) return null;
+  
+    const decoded = verifyToken(token);
+    if (!decoded) return null;
+  
+    return decoded;
+  }
 export async function POST(req) {
   try {
-    // Authentication
-    if (!req.user) {
-      return Response.json({ message: 'Unauthorized' }, { status: 401 });
+    await connectToDB();
+
+    const user = await getUserFromToken();
+
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { paymentId, receiptUrl, receiptDetails } = await req.json();
+    const {
+      orderId,
+      method, // "ONLINE" | "BANK_RECEIPT"
+      amount,
+      authority,
+      refId,
+      gateway,
+      receiptImageUrl,
+    } = await req.json();
 
-    if (!paymentId || !receiptUrl) {
-      return Response.json({ message: 'Missing required fields' }, { status: 400 });
+    // ===== Validation =====
+    if (!orderId || !method || !amount) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
-    // Find payment and order
-    const payment = await Payment.findById(paymentId).populate('order');
-    if (!payment || payment.method !== 'BANK_RECEIPT') {
-      return Response.json({ message: 'Invalid payment' }, { status: 400 });
+    if (!["ONLINE", "BANK_RECEIPT"].includes(method)) {
+      return NextResponse.json(
+        { message: "Invalid payment method" },
+        { status: 400 }
+      );
     }
 
-    const order = payment.order;
-    if (order.user.toString() !== req.user._id.toString()) {
-      return Response.json({ message: 'Unauthorized' }, { status: 403 });
-    }
-    if (order.paymentStatus !== 'PENDING') {
-      return Response.json({ message: 'Payment already processed' }, { status: 400 });
+    const order = await Order.findOne({
+      _id: orderId,
+      user: user.userId,
+    });
+
+    if (!order) {
+      return NextResponse.json(
+        { message: "Order not found" },
+        { status: 404 }
+      );
     }
 
-    // Update payment meta with receipt
-    payment.meta = { receiptUrl, receiptDetails, uploadedAt: new Date() };
-    await payment.save();
+    if (amount <= 0) {
+      return NextResponse.json(
+        { message: "Invalid amount" },
+        { status: 400 }
+      );
+    }
 
-    // Set statuses
-    order.paymentStatus = 'UNDER_REVIEW';
+    // ===== ساخت Payment =====
+    const paymentData = {
+      order: order._id,
+      method,
+      amount,
+      status: method === "ONLINE" ? "PAID" : "PENDING",
+    };
+
+    // آنلاین
+    if (method === "ONLINE") {
+      paymentData.onlinePayment = {
+        authority,
+        refId,
+        gateway,
+        paidAt: new Date(),
+      };
+    }
+
+    // رسید بانکی
+    if (method === "BANK_RECEIPT") {
+      if (!receiptImageUrl) {
+        return NextResponse.json(
+          { message: "Receipt image is required" },
+          { status: 400 }
+        );
+      }
+
+      paymentData.bankReceipt = {
+        imageUrl: receiptImageUrl,
+        uploadedAt: new Date(),
+        reviewStatus: "PENDING",
+      };
+    }
+
+    const payment = await Payment.create(paymentData);
+
+    // ===== اضافه کردن به آرایه payments در Order =====
+    order.payments.push(payment._id);
+
+    // ===== آپدیت وضعیت مالی سفارش =====
+    if (method === "ONLINE") {
+      const totalPaid = await Payment.aggregate([
+        { $match: { order: order._id, status: "PAID" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]);
+
+      const paidAmount = totalPaid[0]?.total || 0;
+
+      if (paidAmount >= order.totalPrice) {
+        order.paymentStatus = "PAID";
+      } else if (paidAmount > 0) {
+        order.paymentStatus = "PARTIALLY_PAID";
+      }
+    }
+
     await order.save();
 
-    return Response.json({ message: 'Receipt uploaded successfully' }, { status: 200 });
+    return NextResponse.json(
+      { message: "Payment created successfully", payment },
+      { status: 201 }
+    );
   } catch (error) {
     console.error(error);
-    return Response.json({ message: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

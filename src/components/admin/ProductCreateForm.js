@@ -309,7 +309,7 @@ export default function ProductCreateForm({ initialData = {} }) {
         label="تصویر اصلی"
         value={formData.mainImage}
         onChange={v => updateField('mainImage', v)}
-        folder="products"
+        folder="product"
       />
 
       <ImageUpload
@@ -317,7 +317,7 @@ export default function ProductCreateForm({ initialData = {} }) {
         multiple
         value={formData.gallery}
         onChange={v => updateField('gallery', v)}
-        folder="products"
+        folder="product"
       />
 
       <Button type="submit" loading={loading}>

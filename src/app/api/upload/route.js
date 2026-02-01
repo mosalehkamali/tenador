@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
+import { NextResponse } from "next/server";
+import { v2 as cloudinary } from "cloudinary";
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,20 +12,32 @@ cloudinary.config({
 export async function POST(req) {
   try {
     const formData = await req.formData();
-    const file = formData.get('file');
+    const file = formData.get("file");
+    const folderInput = formData.get("folder");
 
     if (!file) {
       return NextResponse.json(
-        { error: 'فایلی ارسال نشده' },
+        { error: "فایلی ارسال نشده" },
         { status: 400 }
       );
     }
 
     if (file.size > 2 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'حجم فایل نباید بیشتر از ۲ مگابایت باشد' },
+        { error: "حجم فایل نباید بیشتر از ۲ مگابایت باشد" },
         { status: 400 }
       );
+    }
+
+    // فولدر پیش‌فرض
+    let folder = "product";
+
+    if (folderInput && typeof folderInput === "string") {
+      // فقط اجازه حروف، عدد، اسلش و dash
+      const sanitized = folderInput.replace(/[^a-zA-Z0-9/_-]/g, "");
+      if (sanitized.trim() !== "") {
+        folder = sanitized;
+      }
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -33,9 +45,9 @@ export async function POST(req) {
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
-          folder: 'product',
-          resource_type: 'image',
-          allowed_formats: ['jpg', 'jpeg', 'png', 'webp','svg'],
+          folder,
+          resource_type: "image",
+          allowed_formats: ["jpg", "jpeg", "png", "webp", "svg"],
         },
         (error, result) => {
           if (error) reject(error);
@@ -49,13 +61,14 @@ export async function POST(req) {
     return NextResponse.json({
       url: result.secure_url,
       publicId: result.public_id,
+      folder,
     });
 
   } catch (error) {
-    console.error('UPLOAD ERROR:', error);
+    console.error("UPLOAD ERROR:", error);
 
     return NextResponse.json(
-      { error: 'خطا در آپلود تصویر' },
+      { error: "خطا در آپلود تصویر" },
       { status: 500 }
     );
   }

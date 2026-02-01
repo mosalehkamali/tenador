@@ -6,7 +6,7 @@ export default function ImageUpload({
   label,
   value,
   onChange,
-  folder = 'uploads',
+  folder = 'product',
   required = false,
   multiple = false,
   accept = 'image/*',
