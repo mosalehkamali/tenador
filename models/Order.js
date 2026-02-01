@@ -39,8 +39,17 @@ const OrderSchema = new mongoose.Schema(
 
     paymentStatus: {
       type: String,
-      enum: ["PENDING", "UNDER_REVIEW", "PAID", "REJECTED"],
+      enum: ["UNPAID", "PARTIALLY_PAID", "PAID"],
       default: "PENDING",
+    },
+
+    reviewedAt: {
+      type: Date,
+    },
+
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
 
     fulfillmentStatus: {
@@ -49,7 +58,6 @@ const OrderSchema = new mongoose.Schema(
       default: "WAITING",
     },
 
-    // 🔥 آدرس منعطف
     address: {
       ref: {
         type: mongoose.Schema.Types.ObjectId,
@@ -65,6 +73,13 @@ const OrderSchema = new mongoose.Schema(
         fullAddress: String,
       },
     },
+
+    payments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Payment",
+      },
+    ],
 
     orderDate: {
       type: Date,

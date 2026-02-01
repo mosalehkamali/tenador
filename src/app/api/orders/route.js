@@ -79,8 +79,7 @@ export async function POST(req) {
       items,
       totalPrice,
       paymentMethod,
-      paymentStatus:
-        paymentMethod === "INSTALLMENT" ? "UNDER_REVIEW" : "PENDING",
+      paymentStatus:"UNPAID",
       fulfillmentStatus: "WAITING",
       address: {
         ref: addressDoc._id,
@@ -96,24 +95,8 @@ export async function POST(req) {
       description,
     });
 
-    // 💳 ساخت Payment
-    const payment = await Payment.create({
-      order: order._id,
-      method: paymentMethod,
-      amount: totalPrice,
-      status: "PENDING",
-    });
-
-    // 🏦 اگر اقساطی بود
-    if (paymentMethod === "INSTALLMENT") {
-      await Installment.create({
-        order: order._id,
-        checks: [],
-      });
-    }
-
     return NextResponse.json(
-      { message: "Order created successfully", order, payment },
+      { message: "Order created successfully", order },
       { status: 201 }
     );
   } catch (error) {

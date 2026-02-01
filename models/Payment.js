@@ -6,12 +6,12 @@ const PaymentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
       required: true,
-      unique: true,
+      index: true,
     },
 
     method: {
       type: String,
-      enum: ["ONLINE", "BANK_RECEIPT", "INSTALLMENT"],
+      enum: ["ONLINE", "BANK_RECEIPT"],
       required: true,
     },
 
@@ -24,6 +24,28 @@ const PaymentSchema = new mongoose.Schema(
       type: String,
       enum: ["PENDING", "PAID", "FAILED", "REJECTED"],
       default: "PENDING",
+    },
+
+    onlinePayment: {
+      authority: String,
+      refId: String,
+      gateway: String,
+      paidAt: Date,
+    },
+
+    bankReceipt: {
+      imageUrl: String,
+      uploadedAt: Date,
+      reviewStatus: {
+        type: String,
+        enum: ["PENDING", "APPROVED", "REJECTED"],
+      },
+      reviewedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      reviewedAt: Date,
+      rejectReason: String,
     },
 
     meta: {

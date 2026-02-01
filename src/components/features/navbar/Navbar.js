@@ -33,7 +33,7 @@ export default function Navbar({ user }) {
 
   return (
     <>
-      <nav className="fixed top-0 right-0 left-0 z-50 bg-[var(--color-background)]/80 backdrop-blur-md border-b border-white/10">
+      <nav className="fixed top-0 right-0 left-0 z-50 bg-gradient-to-b from-[#fff] to-[#aa4725]/30 backdrop-blur-md border-b border-[#aa4725]/80">
         {/* Desktop Navigation */}
         <div className="hidden lg:block">
           {/* Top Row */}
@@ -219,7 +219,7 @@ export default function Navbar({ user }) {
           </div>
         </div>
       </nav>
-      <div className='h-[120px] lg:h-[140px]'></div>
+      {/* <div className='h-[120px] lg:h-[140px]'></div> */}
       <CartDrawer
         isOpen={openCart}
         onClose={() => setOpenCart(false)}

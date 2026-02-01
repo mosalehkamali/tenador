@@ -1,28 +1,85 @@
 import mongoose from "mongoose";
 
+const CheckSchema = new mongoose.Schema(
+  {
+    checkNumber: {
+      type: String,
+    },
+
+    amount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    dueDate: {
+      type: Date,
+      required: true,
+    },
+
+    paidAt: {
+      type: Date,
+    },
+
+    status: {
+      type: String,
+      enum: ["PENDING", "CLEARED", "BOUNCED"],
+      default: "PENDING",
+    },
+
+    receiptImageUrl: {
+      type: String,
+    },
+
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    reviewedAt: {
+      type: Date,
+    },
+
+    bounceReason: {
+      type: String,
+    },
+  },
+  { _id: true }
+);
+
 const InstallmentSchema = new mongoose.Schema(
   {
     order: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
       required: true,
-      unique: true,
     },
 
-    totalAmount: Number,
-    numberOfChecks: Number,
+    downPayment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Payment",
+      required: true,
+    },
 
-    checks: [
-      {
-        amount: Number,
-        dueDate: Date,
-        status: {
-          type: String,
-          enum: ["PENDING", "CLEARED", "BOUNCED"],
-          default: "PENDING",
-        },
-      },
-    ],
+    totalAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    numberOfChecks: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
+    status: {
+      type: String,
+      enum: ["ACTIVE", "COMPLETED", "DEFAULTED"],
+      default: "ACTIVE",
+    },
+
+    checks: [CheckSchema],
   },
   { timestamps: true }
 );
