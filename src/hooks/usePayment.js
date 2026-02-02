@@ -1,40 +1,4 @@
 
-const MOCK_ORDERS = {
-  "ORD-12345": {
-    trackingCode: "ORD-12345",
-    items: [
-      { id: "1", name: "دوره جامع طراحی وب", price: 4500000, quantity: 1 },
-      { id: "2", name: "کتاب استراتژی محتوا", price: 250000, quantity: 2 }
-    ],
-    totalPrice: 5000000,
-    paymentMethod: "BANK_RECEIPT",
-    status: "PENDING",
-    userEmail: "" 
-  },
-  "ORD-67890": {
-    trackingCode: "ORD-67890",
-    items: [
-      { id: "3", name: "لپ‌تاپ گیمینگ ایسوس", price: 65000000, quantity: 1 }
-    ],
-    totalPrice: 65000000,
-    paymentMethod: "INSTALLMENT",
-    status: "PENDING",
-    userEmail: "user@example.com",
-    installmentPlan: {
-      totalInstallments: 12,
-      monthlyAmount: 6000000,
-      prepayment: 5000000
-    }
-  },
-  "ORD-ONLINE": {
-    trackingCode: "ORD-ONLINE",
-    items: [],
-    totalPrice: 1000,
-    paymentMethod: "ONLINE",
-    status: "PENDING"
-  }
-};
-
 export const fetchOrder = async (trackingCode) => {
   if (!trackingCode) {
     throw new Error("Tracking code is required");
@@ -63,8 +27,51 @@ export const updateProfileEmail = async (email) => {
   console.log(`Email updated to: ${email}`);
 };
 
-export const submitPaymentReceipt = async (data) => {
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  console.log("Payment receipt submitted", data);
-  return true;
-};
+export const submitPaymentReceipt = async ({
+  orderId,
+  amount,
+  receiptImageUrl,
+}) =>{
+  try {
+    if (!orderId) {
+      throw new Error("orderId is required");
+    }
+
+    if (!amount || amount <= 0) {
+      throw new Error("Invalid amount");
+    }
+
+    if (!receiptImageUrl) {
+      throw new Error("Receipt image is required");
+    }
+
+    const res = await fetch("/api/payments/bank-receipt", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        orderId,
+        method: "BANK_RECEIPT",
+        amount,
+        receiptImageUrl,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to create payment");
+    }
+
+    return {
+      success: true,
+      payment: data.payment,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || "Something went wrong",
+    };
+  }
+}

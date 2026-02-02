@@ -6,7 +6,7 @@ const BANK_DETAILS = {
   accountNumber: "1234567890123",
   cardNumber: "6037997123456789",
   iban: "IR123456789012345678901234",
-  ownerName: "فخرالدین صیف الدینی"
+  ownerName: "فروشگاه ورزشی تنادور"
 };
 
 const BankInfoBox = () => {

@@ -13,7 +13,6 @@ const UserSchema = new mongoose.Schema(
 
     phone: {
       type: String,
-      required: function() { return this.provider === 'local'; },
       unique: true,
       sparse: true,
       trim: true,
@@ -35,7 +34,6 @@ const UserSchema = new mongoose.Schema(
       type: String,
       unique: true,
       sparse: true,
-      required: function() { return this.provider === 'google'; },
     },
 
     phoneVerified: {
@@ -59,7 +57,7 @@ const UserSchema = new mongoose.Schema(
     // ------------------
     role: {
       type: String,
-      enum: ["user", "coach", "admin","seller","national_player"],
+      enum: ["user", "coach", "admin", "seller", "national_player"],
       default: "user",
     },
 
@@ -119,15 +117,14 @@ UserSchema.virtual("comments", {
   foreignField: "user",
 });
 
-//addresses
+// Addresses
 UserSchema.virtual("addresses", {
   ref: "Address",
   localField: "_id",
-  foreignField: "user"
+  foreignField: "user",
 });
 
 UserSchema.set("toObject", { virtuals: true });
 UserSchema.set("toJSON", { virtuals: true });
 
-export default mongoose.models.User ||
-  mongoose.model("User", UserSchema);
+export default mongoose.models.User || mongoose.model("User", UserSchema);

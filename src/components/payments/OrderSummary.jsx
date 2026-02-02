@@ -35,22 +35,35 @@ const OrderSummary = ({ order }) => {
         {order.items.map((item) => (
           <div
             key={item.product._id}
-            className="flex flex-col justify-between py-4 border-b border-[var(--color-primary)]/30 min-h-[90px]"
+            className="flex justify-between py-4 border-b border-[var(--color-primary)]/30 min-h-[90px]"
           >
-            {/* Top Section: Name + Quantity */}
-            <div className="flex items-start justify-between gap-3">
-              <span className="text-sm text-gray-800 leading-6 line-clamp-2">
-                {item.product.name}
-              </span>
-
-              <span className="shrink-0 bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs px-2 py-1 rounded-full">
-                × {item.quantity}
-              </span>
+            <div className="relative w-14 h-14 md:w-18 md:h-18 flex-shrink-0 border border-[var(--color-primary)]/30 rounded-md">
+              <img
+                src={item.product.mainImage}
+                alt={item.product.name}
+                className="
+                  w-full h-full object-cover
+                  rounded-xl border border-slate-100
+                "
+              />
             </div>
 
-            {/* Bottom Section: Price */}
-            <div className="text-sm font-semibold text-gray-900 text-left mt-3">
-              {formatPrice(item.product.basePrice * item.quantity)}
+            <div className='pr-2'>
+              {/* Top Section: Name + Quantity */}
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-sm text-gray-800 leading-6 line-clamp-2">
+                  {item.product.name}
+                </span>
+
+                <span className="shrink-0 bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs px-2 py-1 rounded-full">
+                  × {item.quantity}
+                </span>
+              </div>
+
+              {/* Bottom Section: Price */}
+              <div className="text-sm font-semibold text-gray-900 text-left mt-3">
+                {formatPrice(item.product.basePrice * item.quantity)}
+              </div>
             </div>
           </div>
         ))}

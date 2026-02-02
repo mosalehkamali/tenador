@@ -12,12 +12,14 @@ import InstallmentPage from '@/components/payments/InstallmentPage';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 import { useRouter } from 'next/navigation';
+import {getProfile,editProfile} from '@/hooks/useProfile';
 
 const PaymentPage = ({ trackingCode }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [order, setOrder] = useState(null);
+  const [user, setUser] = useState(null);
   const [receiptFile, setReceiptFile] = useState(null);
   const [email, setEmail] = useState('');
   const [rulesChecked, setRulesChecked] = useState(false);
@@ -36,7 +38,13 @@ const PaymentPage = ({ trackingCode }) => {
             return;
           }
           setOrder(fetchedOrder);
+          //getUser 
+          const profile = await getProfile()
+          setUser(profile)
+          
         } catch (error) {
+          console.log(error);
+          
             console.error("Error fetching order:", error);
             router.push('/p-user/404');
             return;
@@ -67,10 +75,21 @@ const PaymentPage = ({ trackingCode }) => {
 
     setSubmitLoading(true);
     try {
-      if (email) await updateProfileEmail(email);
+      if (email) await editProfile(email);
       
       if (order.paymentMethod === 'BANK_RECEIPT') {
-        await submitPaymentReceipt({ trackingCode, receiptFile });
+        const result = await submitPaymentReceipt({
+          orderId: order._id,
+          amount: order.totalPrice,
+          receiptImageUrl: uploadedImageUrl,
+        });
+      
+        if (!result.success) {
+          toast.error(result.error);
+          return;
+        }
+      
+        toast.success("رسید شما با موفقیت ثبت شد");
       }
 
       await Swal.fire({
@@ -116,7 +135,7 @@ const PaymentPage = ({ trackingCode }) => {
     <ReceiptUploader onFileChange={setReceiptFile} />
     
     <EmailBox 
-      show={!order.userEmail} 
+      show={!user.email} 
       email={email} 
       setEmail={setEmail} 
     />
