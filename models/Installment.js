@@ -75,7 +75,7 @@ const InstallmentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["ACTIVE", "COMPLETED", "DEFAULTED"],
+      enum: ["PENDING", "ACTIVE", "COMPLETED", "DEFAULTED"],
       default: "ACTIVE",
     },
 

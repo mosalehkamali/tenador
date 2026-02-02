@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { fetchOrder,updateProfileEmail, submitPaymentReceipt } from '@/hooks/usePayment';
+import { fetchOrder, submitPaymentReceipt } from '@/hooks/usePayment';
 import OrderSummary from '@/components/payments/OrderSummary';
 import BankInfoBox from '@/components/payments/BankInfoBox';
 import ReceiptUploader from '@/components/payments/ReceiptUploader';
@@ -118,7 +118,7 @@ const PaymentPage = ({ trackingCode }) => {
   }
 
   if (order.paymentMethod === 'INSTALLMENT') {
-    return <InstallmentPage order={order} />;
+    return <InstallmentPage user={user} order={order} />;
   }
 
   return (
