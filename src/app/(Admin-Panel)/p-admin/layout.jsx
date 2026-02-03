@@ -1,4 +1,4 @@
-import '@/app/(Site)/globals.css';
+import '@/app/globals.css';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AdminLayout from "@/components/admin/Layout"
