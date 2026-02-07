@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FiPlus, FiTrash2, FiChevronDown, FiChevronUp, FiLayers, FiTag } from 'react-icons/fi';
 import AdminLayout from '@/components/admin/Layout';
 import Button from '@/components/admin/Button';
+import Textarea from '@/components/admin/Textarea';
 import Input from '@/components/admin/Input';
 import Select from '@/components/admin/Select';
 import { showToast } from '@/lib/toast';
@@ -204,7 +205,7 @@ export default function AddCategory() {
               >
                 <div className="grid md:grid-cols-2 gap-5">
                   {productPrompts.map((item, index) => (
-                    <Input
+                    <Textarea
                       key={item.field}
                       label={`Prompt برای ${item.field}`}
                       value={item.context}
@@ -271,7 +272,13 @@ export default function AddCategory() {
                     الزامی
                   </label>
                 </div>
-
+                <Textarea
+                  label="Prompt (اختیاری)"
+                  name="attrPrompt"
+                  value={currentAttribute.prompt}
+                  onChange={(e) => setCurrentAttribute((prev) => ({ ...prev, prompt: e.target.value }))}
+                  placeholder="مثال: سایز کفش را انتخاب کنید"
+                />
                 {currentAttribute.type === 'select' && (
                   <Input
                     label="گزینه‌ها (با کاما جدا کنید)"

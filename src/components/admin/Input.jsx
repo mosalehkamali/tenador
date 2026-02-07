@@ -31,9 +31,8 @@ export default function Input({
         onChange={onChange}
         placeholder={placeholder}
         required={required}
-        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-400 ${
-          error ? 'border-red-500' : 'border-gray-300'
-        } ${className}`}
+        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors bg-white text-gray-900 placeholder-gray-400 ${error ? 'border-red-500' : 'border-gray-300'
+          } ${className}`}
         {...props}
       />
       {error && (
