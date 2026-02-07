@@ -8,7 +8,7 @@ export async function POST(req) {
     await connectToDB();
 
     const body = await req.json();
-    const { title,name, parent, attributes } = body;
+    const { title,name, parent, prompts, attributes } = body;
 
     // Title required
     if (!title || title.trim() === "") {
@@ -72,6 +72,7 @@ console.log(createSlug(name));
       title,
       name,
       parent: parent || null,
+      prompts: prompts || [],
       attributes: attributes || [],
     });
 

@@ -41,6 +41,11 @@ const schema = new mongoose.Schema(
       default: "",
     },
 
+    icon: {
+      type: String,
+      default: "",
+    },
+
     image: {
       type: String,
       default: "",

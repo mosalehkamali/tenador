@@ -9,6 +9,7 @@ export default function AddBrand() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState({
     logo: false,
+    icon: false,
     image: false,
   });
 
@@ -19,6 +20,7 @@ export default function AddBrand() {
     foundedYear: '',
     description: '',
     logo: '',
+    icon: '',
     image: '',
   });
 
@@ -170,13 +172,23 @@ export default function AddBrand() {
               />
             </div>
 
-            {/* logo */}
-            <UploadField
-              label="لوگوی برند"
-              url={formData.logo}
-              loading={uploading.logo}
-              onSelect={(f) => uploadImage(f, 'logo')}
-            />
+            <div className='lg:flex w-full gap-5'>
+              {/* logo */}
+              <UploadField
+                label="لوگوی برند"
+                url={formData.logo}
+                loading={uploading.logo}
+                onSelect={(f) => uploadImage(f, 'logo')}
+              />
+
+              {/* icon */}
+              <UploadField
+                label="آیکن برند"
+                url={formData.icon}
+                loading={uploading.icon}
+                onSelect={(f) => uploadImage(f, 'icon')}
+              />
+            </div>
 
             {/* image */}
             <UploadField
@@ -202,7 +214,7 @@ export default function AddBrand() {
 /* ---------- upload field ---------- */
 function UploadField({ label, url, loading, onSelect }) {
   return (
-    <div>
+    <div className='w-full'>
       <label className="block mb-2 text-sm font-medium">{label}</label>
       <label className="flex items-center justify-center h-40 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500">
         {url ? (

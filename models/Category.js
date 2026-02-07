@@ -56,7 +56,7 @@ const CategorySchema = new mongoose.Schema(
       required: true,
       trim: true,
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           // بررسی اینکه فقط حروف انگلیسی و اعداد باشد
           return /^[a-zA-Z0-9\s\-_]+$/.test(v);
         },
@@ -71,6 +71,12 @@ const CategorySchema = new mongoose.Schema(
       trim: true,
     },
 
+    prompts: [
+      {
+        field: String,
+        context: String
+      }
+    ],
     // تعریف واریانت ها
     attributes: {
       type: [AttributeSchema],

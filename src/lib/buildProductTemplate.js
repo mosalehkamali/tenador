@@ -89,32 +89,38 @@ Example:
 Raw content: "Wilson Tour Slam Lite Adult Recreational Tennis Racket"
 Correct name output:
 "راکت تنیس ویلسون Tour Slam Lite"
+${category.prompts.map(prompt => prompt.field === "name" ? "- important points:" + prompt.context.toString() : null)}
 
 modelName:
 - Technical or commercial model serie identifier
 - Can be English or mixed (e.g. "Air Zoom Pegasus 40")
 - mandatory , note that series is not full model , is considered like “T-Fight” and not “T-Fight 300S”
+${category.prompts.map(prompt => prompt.field === "modelName" ? "- important points:" + prompt.context.toString() : null)}
 
 shortDescription:
 - Persian
 - 3 line concise sentences
 - Marketing-friendly
 - No emojis
+${category.prompts.map(prompt => prompt.field === "shortDescription" ? "- important points:" + prompt.context.toString() : null)}
 
 longDescription:
 - Persian
 - Detailed, structured
 - Explain usage, benefits, materials if possible
 - SEO-friendly but natural
+${category.prompts.map(prompt => prompt.field === "longDescription" ? "- important points:" + prompt.context.toString() : null)}
 
 suitableFor:
 - Persian
 - Who this product is for (e.g. "مناسب بازیکنان حرفه‌ای تنیس")
+${category.prompts.map(prompt => prompt.field === "suitableFor" ? "- important points:" + prompt.context.toString() : null)}
 
 basePrice:
 - Number ONLY
 - If price is missing, estimate realistically based on product type
 - DO NOT write strings like "نامشخص"
+${category.prompts.map(prompt => prompt.field === "basePrice" ? "- important points:" + prompt.context.toString() : null)}
 
 score:
 - DO NOT include this field at all

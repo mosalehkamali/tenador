@@ -15,6 +15,7 @@ export async function POST(req) {
       foundedYear = null,
       description = "",
       logo = "",
+      icon = "",
       image = "",
       models = [],
     } = body;
@@ -74,6 +75,7 @@ export async function POST(req) {
       foundedYear,
       description: description.trim(),
       logo: logo.trim(),
+      icon: icon.trim(),
       image: image.trim(),
       models: Array.isArray(models) ? models : [],
     });

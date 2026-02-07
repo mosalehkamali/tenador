@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation'
 import { FiSearch, FiShoppingCart, FiUser, FiMenu, FiX } from 'react-icons/fi';
 import { HiOutlineViewGrid } from 'react-icons/hi';
 import Input from '@/components/ui/Input';
@@ -30,6 +31,8 @@ export default function Navbar({ user }) {
     setIsCategoryOpen(!isCategoryOpen);
   };
 
+  const pathname = usePathname()
+  const isHomePage = pathname === '/'
 
   return (
     <>
@@ -219,7 +222,7 @@ export default function Navbar({ user }) {
           </div>
         </div>
       </nav>
-      {/* <div className='h-[120px] lg:h-[140px]'></div> */}
+      {!isHomePage && <div className='h-[120px] lg:h-[140px]'></div>}
       <CartDrawer
         isOpen={openCart}
         onClose={() => setOpenCart(false)}
