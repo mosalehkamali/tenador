@@ -13,7 +13,6 @@ const ProductInfo = ({ product }) => {
     attr => attr.type === "select"
   );
 
-
   const handleAddToCart = () => {
     addToCart(product, 1);
     toast.success("به سبد خرید اضافه شد");
