@@ -2,7 +2,38 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiPlus, FiTrash2, FiChevronDown, FiChevronUp, FiLayers, FiTag } from 'react-icons/fi';
+import { 
+  FiPlus, 
+  FiTrash2, 
+  FiChevronDown, 
+  FiChevronUp, 
+  FiLayers, 
+  FiTag, 
+  FiEdit3, 
+  FiMenu, 
+  FiX 
+} from 'react-icons/fi';
+
+// DnD Kit Imports
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  defaultDropAnimationSideEffects,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+
 import AdminLayout from '@/components/admin/Layout';
 import Button from '@/components/admin/Button';
 import Textarea from '@/components/admin/Textarea';
@@ -11,11 +42,86 @@ import Select from '@/components/admin/Select';
 import { showToast } from '@/lib/toast';
 import { showError } from '@/lib/swal';
 
+// --- Sortable Item Component ---
+function SortableAttribute({ attr, onRemove, onEdit }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: attr.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+    opacity: isDragging ? 0.6 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white border rounded-[var(--radius)] p-4 hover:shadow-md transition group ${isDragging ? 'border-[var(--color-primary)] ring-1 ring-[var(--color-primary)] shadow-lg' : 'border-neutral-200'}`}
+    >
+      <div className="flex items-center gap-4">
+        <div 
+          {...attributes} 
+          {...listeners} 
+          className="cursor-grab active:cursor-grabbing text-neutral-400 hover:text-neutral-600 p-2 bg-neutral-50 rounded"
+        >
+          <FiMenu size={18} />
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-neutral-800">{attr.label}</span>
+            {attr.required && <span className="text-[10px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded border border-red-100">الزامی</span>}
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-xs text-neutral-500 font-mono">{attr.name}</span>
+            <span className="text-xs text-neutral-400">•</span>
+            <span className="text-xs text-neutral-500">{attr.type}</span>
+            <span className="text-xs text-neutral-400">•</span>
+            <span className="text-xs text-neutral-500 font-bold">Priority: {attr.order}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => onEdit(attr)}
+          className="flex items-center gap-1 h-9 bg-neutral-50"
+        >
+          <FiEdit3 size={14} />
+          ویرایش
+        </Button>
+        <Button
+          type="button"
+          variant="danger"
+          size="sm"
+          onClick={() => onRemove(attr.id)}
+          className="flex items-center gap-1 h-9"
+        >
+          <FiTrash2 size={14} />
+          حذف
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// --- Main Page Component ---
 export default function AddCategory() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [showPromptSection, setShowPromptSection] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const productFields = [
     'name',
@@ -47,6 +153,18 @@ export default function AddCategory() {
     prompt: '',
   });
 
+  // DnD Sensors Configuration
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Avoid accidental drags when clicking buttons
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -61,29 +179,58 @@ export default function AddCategory() {
     }
   };
 
-  const addAttribute = () => {
+  const normalizeOrders = (attrs) => {
+    return attrs.map((attr, index) => ({
+      ...attr,
+      order: index + 1,
+    }));
+  };
+
+  const handleAddOrUpdateAttribute = () => {
     if (!currentAttribute.name || !currentAttribute.label) {
       showToast.warning('نام و برچسب ویژگی الزامی است');
       return;
     }
 
-    const attribute = {
+    const attrData = {
       name: currentAttribute.name,
       label: currentAttribute.label,
       type: currentAttribute.type,
       required: currentAttribute.required,
-      options:
-        currentAttribute.type === 'select' && currentAttribute.options
-          ? currentAttribute.options.split(',').map((opt) => opt.trim())
-          : [],
-      prompt: currentAttribute.prompt || undefined,
+      options: currentAttribute.type === 'select' 
+        ? currentAttribute.options.split(',').map((opt) => opt.trim()).filter(Boolean)
+        : [],
+      prompt: currentAttribute.prompt || '',
     };
 
-    setFormData((prev) => ({
-      ...prev,
-      attributes: [...prev.attributes, attribute],
-    }));
+    if (editingId) {
+      // Edit mode
+      setFormData((prev) => ({
+        ...prev,
+        attributes: prev.attributes.map((attr) => 
+          attr.id === editingId ? { ...attr, ...attrData } : attr
+        ),
+      }));
+      setEditingId(null);
+      showToast.success('ویژگی با موفقیت ویرایش شد');
+    } else {
+      // Create mode
+      const newAttribute = {
+        ...attrData,
+        id: `attr-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`,
+        order: formData.attributes.length + 1,
+      };
+      setFormData((prev) => ({
+        ...prev,
+        attributes: [...prev.attributes, newAttribute],
+      }));
+      showToast.success('ویژگی جدید اضافه شد');
+    }
 
+    resetAttributeForm();
+  };
+
+  const resetAttributeForm = () => {
     setCurrentAttribute({
       name: '',
       label: '',
@@ -92,13 +239,48 @@ export default function AddCategory() {
       options: '',
       prompt: '',
     });
+    setEditingId(null);
   };
 
-  const removeAttribute = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      attributes: prev.attributes.filter((_, i) => i !== index),
-    }));
+  const handleEditInit = (attr) => {
+    setEditingId(attr.id);
+    setCurrentAttribute({
+      name: attr.name,
+      label: attr.label,
+      type: attr.type,
+      required: attr.required,
+      options: Array.isArray(attr.options) ? attr.options.join(', ') : '',
+      prompt: attr.prompt || '',
+    });
+    // Smooth scroll to builder form
+    document.getElementById('attribute-form-anchor')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const removeAttribute = (id) => {
+    setFormData((prev) => {
+      const filtered = prev.attributes.filter((attr) => attr.id !== id);
+      return {
+        ...prev,
+        attributes: normalizeOrders(filtered),
+      };
+    });
+    if (editingId === id) resetAttributeForm();
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setFormData((prev) => {
+        const oldIndex = prev.attributes.findIndex((a) => a.id === active.id);
+        const newIndex = prev.attributes.findIndex((a) => a.id === over.id);
+        const reordered = arrayMove(prev.attributes, oldIndex, newIndex);
+        return {
+          ...prev,
+          attributes: normalizeOrders(reordered),
+        };
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -137,7 +319,7 @@ export default function AddCategory() {
   };
 
   return (
-    <div title="افزودن دسته‌بندی جدید" className="min-h-screen bg-[var(--color-background)] font-[var(--font-sans)] text-[var(--color-text)]">
+    <div className="min-h-screen bg-[var(--color-background)] font-[var(--font-sans)] text-[var(--color-text)]">
       <div className="max-w-5xl mx-auto px-4 py-10">
         <div className="bg-white rounded-[var(--radius)] shadow-xl border border-neutral-100 transition-all duration-300 hover:shadow-2xl">
           <form onSubmit={handleSubmit} className="p-8 space-y-10">
@@ -149,72 +331,72 @@ export default function AddCategory() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">ایجاد دسته‌بندی جدید</h1>
-                <p className="text-sm text-neutral-500">اطلاعات اصلی دسته‌بندی را وارد کنید</p>
+                <p className="text-sm text-neutral-500">فیلدها و ساختار داده‌ای دسته‌بندی را مدیریت کنید</p>
               </div>
             </div>
 
             {/* Basic Info */}
             <div className="grid md:grid-cols-2 gap-6">
               <Input
-                label="عنوان دسته‌بندی"
+                label="عنوان دسته‌بندی (فارسی)"
                 name="title"
                 value={formData.title}
                 onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                 required
-                placeholder="مثال: کفش ورزشی"
+                placeholder="مثال: گوشی هوشمند"
               />
 
               <Input
-                label="نام دسته‌بندی (انگلیسی)"
+                label="نام دسته‌بندی (Slug انگلیسی)"
                 name="name"
                 value={formData.name}
                 onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                 required
-                placeholder="sport-shoes"
+                placeholder="smart-phones"
                 pattern="^[a-zA-Z0-9\s\-_]+$"
               />
             </div>
 
             <Select
-              label="دسته والد (اختیاری)"
+              label="دسته والد"
               name="parent"
               value={formData.parent}
               onChange={(e) => setFormData((prev) => ({ ...prev, parent: e.target.value }))}
               options={categories.map((cat) => ({ value: cat._id, label: cat.title }))}
-              placeholder="انتخاب دسته والد"
+              placeholder="بدون والد (دسته اصلی)"
             />
 
-            {/* Product Prompt Section */}
-            <div className="border rounded-[var(--radius)] p-6 transition-all duration-300 bg-neutral-50">
+            {/* AI Prompts Section */}
+            <div className="border rounded-[var(--radius)] p-6 bg-neutral-50/50">
               <button
                 type="button"
                 onClick={() => setShowPromptSection((prev) => !prev)}
-                className="flex items-center justify-between w-full text-right"
+                className="flex items-center justify-between w-full"
               >
-                <div className="flex items-center gap-2 font-semibold text-[var(--color-primary)]">
+                <div className="flex items-center gap-2 font-bold text-[var(--color-primary)]">
                   <FiTag />
-                  پرامپت فیلدهای محصول (اختیاری)
+                  تنظیمات هوش مصنوعی (AI Prompts)
                 </div>
                 {showPromptSection ? <FiChevronUp /> : <FiChevronDown />}
               </button>
 
               <div
                 className={`overflow-hidden transition-all duration-500 ${
-                  showPromptSection ? 'max-h-[1000px] mt-6' : 'max-h-0'
+                  showPromptSection ? 'max-h-[2000px] mt-6' : 'max-h-0'
                 }`}
               >
                 <div className="grid md:grid-cols-2 gap-5">
                   {productPrompts.map((item, index) => (
                     <Textarea
                       key={item.field}
-                      label={`Prompt برای ${item.field}`}
+                      label={`دستورالعمل برای فیلد ${item.field}`}
                       value={item.context}
                       onChange={(e) => {
                         const updated = [...productPrompts];
                         updated[index].context = e.target.value;
                         setProductPrompts(updated);
                       }}
-                      placeholder="توضیح یا راهنمای AI برای این فیلد"
+                      placeholder={`توضیح دهید AI چگونه باید مقدار ${item.field} را تولید کند...`}
                     />
                   ))}
                 </div>
@@ -222,125 +404,138 @@ export default function AddCategory() {
             </div>
 
             {/* Attributes Section */}
-            <div className="border-t pt-8 space-y-6">
-              <h3 className="text-lg font-bold">ویژگی‌های اختصاصی دسته</h3>
+            <div id="attribute-form-anchor" className="border-t pt-8 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  ساختار ویژگی‌های اختصاصی
+                  {editingId && <span className="text-xs font-normal bg-amber-100 text-amber-700 px-2 py-0.5 rounded">در حال ویرایش...</span>}
+                </h3>
+              </div>
 
-              <div className="bg-neutral-50 rounded-[var(--radius)] p-6 space-y-5">
+              {/* Attribute Builder Form */}
+              <div className={`rounded-[var(--radius)] p-6 space-y-5 transition-all duration-300 border-2 ${editingId ? 'bg-amber-50/30 border-amber-200' : 'bg-neutral-50 border-transparent'}`}>
                 <div className="grid md:grid-cols-2 gap-4">
                   <Input
-                    label="نام ویژگی (انگلیسی)"
+                    label="نام سیستمی (انگلیسی)"
                     value={currentAttribute.name}
-                    onChange={(e) =>
-                      setCurrentAttribute((prev) => ({ ...prev, name: e.target.value }))
-                    }
+                    onChange={(e) => setCurrentAttribute((p) => ({ ...p, name: e.target.value }))}
+                    placeholder="e.g. size"
                   />
                   <Input
-                    label="برچسب (فارسی)"
+                    label="نام نمایشی (فارسی)"
                     value={currentAttribute.label}
-                    onChange={(e) =>
-                      setCurrentAttribute((prev) => ({ ...prev, label: e.target.value }))
-                    }
+                    onChange={(e) => setCurrentAttribute((p) => ({ ...p, label: e.target.value }))}
+                    placeholder="مثال: اندازه"
                   />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <Select
-                    label="نوع"
+                    label="نوع ورودی"
                     value={currentAttribute.type}
-                    onChange={(e) =>
-                      setCurrentAttribute((prev) => ({ ...prev, type: e.target.value }))
-                    }
+                    onChange={(e) => setCurrentAttribute((p) => ({ ...p, type: e.target.value }))}
                     options={[
-                      { value: 'string', label: 'متن' },
+                      { value: 'string', label: 'متن کوتاه' },
                       { value: 'number', label: 'عدد' },
-                      { value: 'select', label: 'انتخابی' },
+                      { value: 'select', label: 'لیست انتخابی (Dropdown)' },
                     ]}
                   />
 
-                  <label className="flex items-center gap-2 text-sm font-medium mt-8 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={currentAttribute.required}
-                      onChange={(e) =>
-                        setCurrentAttribute((prev) => ({
-                          ...prev,
-                          required: e.target.checked,
-                        }))
-                      }
-                      className="w-4 h-4 accent-[var(--color-primary)]"
-                    />
-                    الزامی
-                  </label>
+                  <div className="flex items-center gap-3 h-full mt-8">
+                    <label className="flex items-center gap-2 text-sm font-bold cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={currentAttribute.required}
+                        onChange={(e) => setCurrentAttribute((p) => ({ ...p, required: e.target.checked }))}
+                        className="w-5 h-5 rounded accent-[var(--color-primary)]"
+                      />
+                      فیلد الزامی است
+                    </label>
+                  </div>
                 </div>
+
                 <Textarea
-                  label="Prompt (اختیاری)"
-                  name="attrPrompt"
+                  label="راهنمای پرامپت ویژگی"
                   value={currentAttribute.prompt}
-                  onChange={(e) => setCurrentAttribute((prev) => ({ ...prev, prompt: e.target.value }))}
-                  placeholder="مثال: سایز کفش را انتخاب کنید"
+                  onChange={(e) => setCurrentAttribute((p) => ({ ...p, prompt: e.target.value }))}
+                  placeholder="راهنمای اختصاصی برای این ویژگی جهت استفاده در تولید محتوا توسط AI..."
                 />
+
                 {currentAttribute.type === 'select' && (
                   <Input
-                    label="گزینه‌ها (با کاما جدا کنید)"
+                    label="گزینه‌های لیست (جدا شده با کاما , )"
                     value={currentAttribute.options}
-                    onChange={(e) =>
-                      setCurrentAttribute((prev) => ({
-                        ...prev,
-                        options: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setCurrentAttribute((p) => ({ ...p, options: e.target.value }))}
+                    placeholder="Option 1, Option 2, Option 3"
                   />
                 )}
 
-                <Button
-                  type="button"
-                  onClick={addAttribute}
-                  className="flex items-center gap-2"
-                >
-                  <FiPlus /> افزودن ویژگی
-                </Button>
+                <div className="flex items-center gap-3 pt-2">
+                  <Button
+                    type="button"
+                    onClick={handleAddOrUpdateAttribute}
+                    className="flex items-center gap-2"
+                  >
+                    {editingId ? <><FiEdit3 /> بروزرسانی ویژگی</> : <><FiPlus /> افزودن به لیست</>}
+                  </Button>
+                  
+                  {editingId && (
+                    <Button type="button" variant="secondary" onClick={resetAttributeForm} className="flex items-center gap-2">
+                      <FiX /> انصراف
+                    </Button>
+                  )}
+                </div>
               </div>
 
-              {formData.attributes.length > 0 && (
-                <div className="space-y-3">
-                  {formData.attributes.map((attr, index) => (
-                    <div
-                      key={index}
-                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white border rounded-[var(--radius)] p-4 hover:shadow-md transition"
-                    >
-                      <div>
-                        <span className="font-semibold">{attr.label}</span>
-                        <span className="text-sm text-neutral-500 mr-2">
-                          ({attr.name} - {attr.type})
-                        </span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="danger"
-                        size="sm"
-                        onClick={() => removeAttribute(index)}
-                        className="flex items-center gap-1"
-                      >
-                        <FiTrash2 size={14} />
-                        حذف
-                      </Button>
-                    </div>
-                  ))}
+              {/* Draggable Reordering List */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-sm text-neutral-500 font-medium">لیست ویژگی‌ها ({formData.attributes.length})</span>
+                  <span className="text-[10px] text-neutral-400">برای تغییر ترتیب، دستگیره را بکشید</span>
                 </div>
-              )}
+                
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                  modifiers={[restrictToVerticalAxis]}
+                >
+                  <div className="space-y-2">
+                    <SortableContext
+                      items={formData.attributes.map((a) => a.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {formData.attributes.map((attr) => (
+                        <SortableAttribute
+                          key={attr.id}
+                          attr={attr}
+                          onRemove={removeAttribute}
+                          onEdit={handleEditInit}
+                        />
+                      ))}
+                    </SortableContext>
+                  </div>
+                </DndContext>
+
+                {formData.attributes.length === 0 && (
+                  <div className="text-center py-12 border-2 border-dashed border-neutral-100 rounded-xl text-neutral-400 italic">
+                    هیچ ویژگی اختصاصی برای این دسته تعریف نشده است.
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
-              <Button type="submit" loading={loading}>
-                ذخیره دسته‌بندی
+            {/* Submit Actions */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-neutral-100">
+              <Button type="submit" loading={loading} className="px-12 text-lg">
+                ایجاد نهایی دسته‌بندی
               </Button>
               <Button
                 type="button"
                 variant="secondary"
                 onClick={() => router.push('/p-admin/admin-categories')}
               >
-                انصراف
+                بازگشت
               </Button>
             </div>
 
