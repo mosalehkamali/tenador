@@ -1,51 +1,69 @@
-export function buildAthleteAiTemplate({ sports, rawContent }) {
-    if (!rawContent || rawContent.trim().length < 30) {
-      throw new Error("متن ورودی برای استخراج اطلاعات کافی نیست");
-    }
-  
-    const sportList = sports.map((s) => ({
-      id: s._id.toString(),
-      name: s.name,
-    }));
-  
-    return `
-  You are a senior sports journalist and data analyst.
-  Your task is to extract athlete information from the provided RAW CONTENT and format it into a valid JSON object.
-  
+export function buildAthleteAiTemplate({ sports, sponsors, rawContent }) {
+  if (!rawContent || rawContent.trim().length < 30) {
+    throw new Error("متن ورودی برای استخراج اطلاعات کافی نیست");
+  }
+
+  // آماده‌سازی لیست رشته‌ها برای هوش مصنوعی
+  const sportList = sports.map((s) => ({
+    id: s._id.toString(),
+    name: s.name,
+  }));
+
+  // آماده‌سازی لیست اسپانسرهای موجود در پایگاه داده
+  const sponsorList = sponsors.map((sp) => ({
+    id: sp._id.toString(),
+    name: sp.name,
+    brand: sp.brandEn || "", // اگر نام انگلیسی هم دارید اضافه کنید تا دقت بالا برود
+  }));
+
+  return `
+  You are a senior sports journalist and data analyst specializing in athlete profiles.
+  Your task is to extract information from RAW CONTENT and map it to our database entities.
+
   ===============================
   GLOBAL RULES
   ===============================
   - Output ONLY valid JSON
-  - Language: PERSIAN (fa-IR)
+  - Language: PERSIAN (fa-IR) for "title", "nationality", "bio", and "honors.title"
   - For missing fields, use null for numbers and empty string "" for strings
-  - DO NOT hallucinate honors or data
-  
+  - DO NOT invent data. If not mentioned, leave it empty.
+
   ===============================
-  FIELD RULES
+  ENTITY MAPPING RULES (CRITICAL)
   ===============================
-  - name: English Name (e.g. "Cristiano Ronaldo") - Only letters, numbers, spaces, - and _
-  - title: Persian Full Name (e.g. "کریستیانو رونالدو")
-  - birthDate: ISO Date string (YYYY-MM-DD)
-  - height: Number (in cm)
-  - weight: Number (in kg)
-  - nationality: Persian name of country
-  - bio: A professional summary in Persian
-  - honors: Array of objects [{ "title": "...", "quantity": number, "description": "..." }]
-  - sponsors: Array of strings (brand names)
-  - sport: Choose the most relevant ID from the AVAILABLE SPORTS list
-  
+  1. sport: Select the most relevant ID from AVAILABLE SPORTS.
+  2. sponsors: Compare brands mentioned in text with AVAILABLE SPONSORS. 
+     - ONLY return the ID of the sponsor.
+     - If a brand is mentioned but NOT in the list, DO NOT include it.
+
   ===============================
-  AVAILABLE SPORTS
+  FIELD DEFINITIONS
+  ===============================
+  - name: English Slug (e.g. "hadi-choopan")
+  - title: Persian Full Name
+  - birthDate: YYYY-MM-DD
+  - height: Number (cm)
+  - weight: Number (kg)
+  - honors: Array of [{ "title": string, "quantity": number }]
+  - bio: Professional summary (3-4 sentences)
+
+  ===============================
+  AVAILABLE SPORTS (Mapping Source)
   ===============================
   ${JSON.stringify(sportList, null, 2)}
-  
+
+  ===============================
+  AVAILABLE SPONSORS (Mapping Source)
+  ===============================
+  ${JSON.stringify(sponsorList, null, 2)}
+
   ===============================
   RAW CONTENT
   ===============================
   ${rawContent}
-  
+
   ===============================
-  REQUIRED JSON STRUCTURE
+  REQUIRED JSON FORMAT
   ===============================
   {
     "name": "",
@@ -57,7 +75,7 @@ export function buildAthleteAiTemplate({ sports, rawContent }) {
     "nationality": "",
     "bio": "",
     "honors": [],
-    "sponsors": []
+    "sponsors": ["ID_1", "ID_2"] 
   }
   `;
-  }
+}
