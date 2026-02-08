@@ -17,57 +17,41 @@ export async function POST(req) {
       nationality,
       bio,
       photo,
+      height,    
+      weight,    
+      honors,    
+      sponsors,  
     } = body;
 
     /* ---------- validations ---------- */
 
-    if (!name || !name.trim()) {
+    if (!name?.trim() || !title?.trim()) {
       return Response.json(
-        { error: "Name is required" },
+        { error: "Name and Title are required" },
         { status: 400 }
       );
     }
 
-    if (!title || !title.trim()) {
-      return Response.json(
-        { error: "Title is required" },
-        { status: 400 }
-      );
-    }
-
-    // regex validation (same as model)
+    // regex validation
     const nameRegex = /^[a-zA-Z0-9\s\-_]+$/;
     if (!nameRegex.test(name)) {
       return Response.json(
-        {
-          error:
-            "Name must contain only English letters, numbers, spaces, - or _",
-        },
+        { error: "Name must contain only English letters, numbers, spaces, - or _" },
         { status: 400 }
       );
     }
 
     if (!sport) {
-      return Response.json(
-        { error: "Sport is required" },
-        { status: 400 }
-      );
+      return Response.json({ error: "Sport ID is required" }, { status: 400 });
     }
 
+    // چک کردن وجود ورزش و ورزشکار تکراری به صورت همزمان برای بهینه‌سازی (Optional)
     const sportFound = await Sport.findById(sport);
     if (!sportFound) {
-      return Response.json(
-        { error: "Sport not found" },
-        { status: 404 }
-      );
+      return Response.json({ error: "Sport not found" }, { status: 404 });
     }
 
-    // duplicate athlete (same name in same sport)
-    const exists = await Athlete.findOne({
-      name: name.trim(),
-      sport,
-    });
-
+    const exists = await Athlete.findOne({ name: name.trim(), sport });
     if (exists) {
       return Response.json(
         { error: "Athlete already exists for this sport" },
@@ -85,10 +69,16 @@ export async function POST(req) {
       nationality: nationality?.trim() || "",
       bio: bio || "",
       photo: photo || "",
+      // فیلدهای جدید
+      height: height || null,
+      weight: weight || null,
+      honors: Array.isArray(honors) ? honors : [], 
+      sponsors: Array.isArray(sponsors) ? sponsors : [],
     });
 
     /* ---------- slug registry ---------- */
 
+    // ثبت در جدول Slug ها
     await registerSlug({
       slug: created.slug,
       type: "athlete",
@@ -108,8 +98,9 @@ export async function POST(req) {
       { status: 201 }
     );
   } catch (err) {
+    console.error("Athlete Creation Error:", err); // لاگ کردن خطا برای دیباگ راحت‌تر
     return Response.json(
-      { error: err.message || "Server error" },
+      { error: err.message || "Internal Server Error" },
       { status: 500 }
     );
   }

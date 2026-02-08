@@ -29,7 +29,7 @@ export async function PUT(req, { params }) {
     await connectToDB();
     const { categoryId } = await params;
     const body = await req.json();
-    const { title, parent, attributes } = body;
+    const { title, parent, attributes, prompts } = body;
 
     const category = await Category.findById(categoryId);
     if (!category) {
@@ -47,6 +47,10 @@ export async function PUT(req, { params }) {
     }
     if (attributes !== undefined) {
       category.attributes = attributes;
+    }
+
+    if (prompts !== undefined) {
+      category.prompts = prompts;
     }
 
     await category.save();

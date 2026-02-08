@@ -10,44 +10,59 @@ const schema = new mongoose.Schema(
       trim: true,
       validate: {
         validator: function(v) {
-          // بررسی اینکه فقط حروف انگلیسی و اعداد باشد
           return /^[a-zA-Z0-9\s\-_]+$/.test(v);
         },
         message: 'نام باید فقط شامل حروف انگلیسی، اعداد، فاصله، خط تیره و زیرخط باشد'
       }
     },
-
     title: {
       type: String,
       required: true,
     },
-
     sport: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Sport",
       required: true,
     },
-
     birthDate: {
       type: Date,
       default: null,
     },
-
+    // --- فیلدهای جدید اضافه شده ---
+    height: {
+      type: Number, // بر حسب سانتی‌متر
+      default: null,
+    },
+    weight: {
+      type: Number, // بر حسب کیلوگرم
+      default: null,
+    },
     nationality: {
       type: String,
       default: "",
     },
-
     bio: {
       type: String,
       default: "",
     },
-
+    honors: [
+      {
+        title: { type: String }, // مثلا: قهرمانی المپیک
+        quantity: { type: Number },
+        description: { type: String }
+      }
+    ],
+    sponsors: [
+      {
+        type: String, // نام برند یا شرکت
+        trim: true
+      }
+    ],
+    // ----------------------------
     photo: {
       type: String, 
       default: "",
     },
-
     slug: {
       type: String,
       unique: true,
@@ -70,5 +85,3 @@ schema.pre("save", async function () {
 });
 
 export default mongoose.models.Athlete || mongoose.model("Athlete", schema);
-
-
