@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import connectToDB from "base/configs/db";
 import Sport from "base/models/Sport";
-import Sponsor from "base/models/Sponsor"; // مدل اسپانسر را وارد کنید
+import Brand from "base/models/Brand"; // مدل اسپانسر را وارد کنید
 import { buildAthleteAiTemplate } from "@/lib/aiAthleteTemplate";
 
 export async function POST(req) {
@@ -15,15 +15,15 @@ export async function POST(req) {
 
     // ۱. دریافت همزمان لیست ورزش‌ها و اسپانسرها از دیتابیس
     // فقط فیلدهای مورد نیاز را می‌گیریم تا پرامپت خیلی سنگین نشود
-    const [sports, sponsors] = await Promise.all([
+    const [sports, Brands] = await Promise.all([
       Sport.find({}, "_id name"),
-      Sponsor.find({}, "_id name brandEn") 
+      Brand.find({}, "_id name brandEn") 
     ]);
 
     // ۲. ارسال هر دو لیست به تابع قالب‌ساز پرامپت
     const prompt = buildAthleteAiTemplate({ 
       sports, 
-      sponsors, 
+      sponsors:Brands, 
       rawContent 
     });
 
