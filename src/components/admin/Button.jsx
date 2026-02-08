@@ -11,7 +11,7 @@ export default function Button({
   type = 'button',
   ...props
 }) {
-  const baseStyles = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'flex font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
     primary: 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary)]/70 focus:ring-[var(--color-primary)]',
