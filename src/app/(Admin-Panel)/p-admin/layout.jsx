@@ -11,13 +11,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fa-IR" dir="rtl">
-      <head>
-        <link 
-          href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" 
-          rel="stylesheet" 
-          type="text/css" 
-        />
-      </head>
+
       <body className="bg-[var(--color-background)] text-[var(--color-text)]">
         <main className="min-h-screen">
         <AdminLayout>{children}</AdminLayout>

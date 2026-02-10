@@ -57,7 +57,7 @@ export default function AddBrand() {
   };
 
   return (
-    <div className="min-h-screen pb-20 font-[YekanBakh,sans-serif]">
+    <div className="min-h-screen pb-20 ">
       {/* --- Header Section --- */}
       <header className="max-w-5xl mx-auto px-6 py-10 flex justify-between items-end">
         <div>

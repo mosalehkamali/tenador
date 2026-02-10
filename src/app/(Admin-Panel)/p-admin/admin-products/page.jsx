@@ -61,7 +61,7 @@ export default function AdminProducts() {
   const handleViewVariants = (product) => router.push(`/p-admin/admin-products/${product._id}/variants`);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-20 font-[YekanBakh,sans-serif]">
+    <div className="min-h-screen bg-[#f8fafc] pb-20">
       {/* Background Decor */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[5%] right-[10%] w-[30%] h-[30%] bg-blue-500/5 blur-[120px] rounded-full" />

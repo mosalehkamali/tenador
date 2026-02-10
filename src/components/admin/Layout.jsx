@@ -26,7 +26,7 @@ export default function AdminLayout({ children, title = 'داشبورد مدیر
   const sidebarWidth = sidebarOpen ? '280px' : '90px';
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] flex font-[YekanBakh,sans-serif]" dir="rtl">
+    <div className="min-h-screen bg-[#F4F7FE] flex" dir="rtl">
       
       {/* --- Sidebar --- */}
       <aside

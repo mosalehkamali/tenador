@@ -101,7 +101,7 @@ export default function EditBrand() {
   );
 
   return (
-    <div className="min-h-screen pb-20 font-[YekanBakh,sans-serif] bg-gray-50/30">
+    <div className="min-h-screen pb-20 bg-gray-50/30">
       {/* --- Header Section --- */}
       <header className="max-w-5xl mx-auto px-6 py-10 flex justify-between items-end">
         <div>

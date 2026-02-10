@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  FiPlus, 
-  FiTrash2, 
-  FiChevronDown, 
-  FiChevronUp, 
-  FiLayers, 
-  FiTag, 
-  FiEdit3, 
-  FiMenu, 
-  FiX 
+import {
+  FiPlus,
+  FiTrash2,
+  FiChevronDown,
+  FiChevronUp,
+  FiLayers,
+  FiTag,
+  FiEdit3,
+  FiMenu,
+  FiX
 } from 'react-icons/fi';
 
 // DnD Kit Imports
@@ -67,9 +67,9 @@ function SortableAttribute({ attr, onRemove, onEdit }) {
       className={`flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white border rounded-[var(--radius)] p-4 hover:shadow-md transition group ${isDragging ? 'border-[var(--color-primary)] ring-1 ring-[var(--color-primary)] shadow-lg' : 'border-neutral-200'}`}
     >
       <div className="flex items-center gap-4">
-        <div 
-          {...attributes} 
-          {...listeners} 
+        <div
+          {...attributes}
+          {...listeners}
           className="cursor-grab active:cursor-grabbing text-neutral-400 hover:text-neutral-600 p-2 bg-neutral-50 rounded"
         >
           <FiMenu size={18} />
@@ -88,7 +88,7 @@ function SortableAttribute({ attr, onRemove, onEdit }) {
           </div>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <Button
           type="button"
@@ -124,17 +124,69 @@ export default function AddCategory() {
   const [editingId, setEditingId] = useState(null);
 
   const productFields = [
-    'name',
-    'modelName',
-    'shortDescription',
-    'longDescription',
-    'suitableFor',
-    'basePrice',
-    'tag',
+    {
+      field: 'name',
+      context: `- MUST strictly follow this exact pattern:
+  "{Persian product type} {Persian brand name} {Exact model name from raw content}"
+- Persian product type MUST be inferred from category and content (e.g. راکت تنیس)
+- Persian brand name MUST be the Persian transliteration of the brand
+  (e.g. Wilson → ویلسون, Nike → نایکی)
+- Model name MUST be copied EXACTLY from raw content in English
+- Do NOT translate, shorten, reorder, or modify the model name
+- This rule overrides any other naming rule
+Example:
+Raw content: "Wilson Tour Slam Lite Adult Recreational Tennis Racket"
+Correct name output:
+"راکت تنیس ویلسون Tour Slam Lite"
+      `
+    },
+    {
+      field: 'modelName',
+      context: `- Technical or commercial model serie identifier
+- Can be English or mixed (e.g. "Air Zoom Pegasus 40")
+- mandatory , note that series is not full model , is considered like “T-Fight” and not “T-Fight 300S”
+      `
+    },
+    {
+      field: 'shortDescription',
+      context: `- Persian
+- 3 line concise sentences
+- Marketing-friendly
+- No emojis
+      `
+    },
+    {
+      field: 'longDescription',
+      context: `- Persian
+- Detailed, structured
+- Explain usage, benefits, materials if possible
+- SEO-friendly but natural
+      `
+    },
+    {
+      field: 'suitableFor',
+      context: `- Persian
+- Who this product is for (e.g. "مناسب بازیکنان حرفه‌ای تنیس")
+      `
+    },
+    {
+      field: 'basePrice',
+      context: `- Number ONLY
+- If price is missing, estimate realistically based on product type
+- DO NOT write strings like "نامشخص"
+      `
+    },
+    {
+      field: 'tag',
+      context: `- Persian keywords
+  - Array of short strings
+  - Useful for search
+      `
+    },
   ];
 
   const [productPrompts, setProductPrompts] = useState(
-    productFields.map((field) => ({ field, context: '' }))
+    productFields.map((item) => ({ field: item.field,context: item.context }))
   );
 
   const [formData, setFormData] = useState({
@@ -197,7 +249,7 @@ export default function AddCategory() {
       label: currentAttribute.label,
       type: currentAttribute.type,
       required: currentAttribute.required,
-      options: currentAttribute.type === 'select' 
+      options: currentAttribute.type === 'select'
         ? currentAttribute.options.split(',').map((opt) => opt.trim()).filter(Boolean)
         : [],
       prompt: currentAttribute.prompt || '',
@@ -207,7 +259,7 @@ export default function AddCategory() {
       // Edit mode
       setFormData((prev) => ({
         ...prev,
-        attributes: prev.attributes.map((attr) => 
+        attributes: prev.attributes.map((attr) =>
           attr.id === editingId ? { ...attr, ...attrData } : attr
         ),
       }));
@@ -381,9 +433,8 @@ export default function AddCategory() {
               </button>
 
               <div
-                className={`overflow-hidden transition-all duration-500 ${
-                  showPromptSection ? 'max-h-[2000px] mt-6' : 'max-h-0'
-                }`}
+                className={`overflow-hidden transition-all duration-500 ${showPromptSection ? 'max-h-[2000px] mt-6' : 'max-h-0'
+                  }`}
               >
                 <div className="grid md:grid-cols-2 gap-5">
                   {productPrompts.map((item, index) => (
@@ -478,7 +529,7 @@ export default function AddCategory() {
                   >
                     {editingId ? <><FiEdit3 /> بروزرسانی ویژگی</> : <><FiPlus /> افزودن به لیست</>}
                   </Button>
-                  
+
                   {editingId && (
                     <Button type="button" variant="secondary" onClick={resetAttributeForm} className="flex items-center gap-2">
                       <FiX /> انصراف
@@ -493,7 +544,7 @@ export default function AddCategory() {
                   <span className="text-sm text-neutral-500 font-medium">لیست ویژگی‌ها ({formData.attributes.length})</span>
                   <span className="text-[10px] text-neutral-400">برای تغییر ترتیب، دستگیره را بکشید</span>
                 </div>
-                
+
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}

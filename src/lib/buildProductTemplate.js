@@ -77,50 +77,22 @@ FIELD RULES (VERY IMPORTANT)
 ===============================
 
 name:
-- MUST strictly follow this exact pattern:
-  "{Persian product type} {Persian brand name} {Exact model name from raw content}"
-- Persian product type MUST be inferred from category and content (e.g. راکت تنیس)
-- Persian brand name MUST be the Persian transliteration of the brand
-  (e.g. Wilson → ویلسون, Nike → نایکی)
-- Model name MUST be copied EXACTLY from raw content in English
-- Do NOT translate, shorten, reorder, or modify the model name
-- This rule overrides any other naming rule
-Example:
-Raw content: "Wilson Tour Slam Lite Adult Recreational Tennis Racket"
-Correct name output:
-"راکت تنیس ویلسون Tour Slam Lite"
-${category.prompts.map(prompt => prompt.field === "name" ? "- important points:" + prompt.context.toString() : null)}
+${category.prompts?.map(prompt => prompt.field === "name" ? prompt.context.toString() : null)}
 
 modelName:
-- Technical or commercial model serie identifier
-- Can be English or mixed (e.g. "Air Zoom Pegasus 40")
-- mandatory , note that series is not full model , is considered like “T-Fight” and not “T-Fight 300S”
-${category.prompts.map(prompt => prompt.field === "modelName" ? "- important points:" + prompt.context.toString() : null)}
+${category.prompts?.map(prompt => prompt.field === "modelName" ? prompt.context.toString() : null)}
 
 shortDescription:
-- Persian
-- 3 line concise sentences
-- Marketing-friendly
-- No emojis
-${category.prompts.map(prompt => prompt.field === "shortDescription" ? "- important points:" + prompt.context.toString() : null)}
+${category.prompts?.map(prompt => prompt.field === "shortDescription" ? prompt.context.toString() : null)}
 
 longDescription:
-- Persian
-- Detailed, structured
-- Explain usage, benefits, materials if possible
-- SEO-friendly but natural
-${category.prompts.map(prompt => prompt.field === "longDescription" ? "- important points:" + prompt.context.toString() : null)}
+${category.prompts?.map(prompt => prompt.field === "longDescription" ? prompt.context.toString() : null)}
 
 suitableFor:
-- Persian
-- Who this product is for (e.g. "مناسب بازیکنان حرفه‌ای تنیس")
-${category.prompts.map(prompt => prompt.field === "suitableFor" ? "- important points:" + prompt.context.toString() : null)}
+${category.prompts?.map(prompt => prompt.field === "suitableFor" ? prompt.context.toString() : null)}
 
 basePrice:
-- Number ONLY
-- If price is missing, estimate realistically based on product type
-- DO NOT write strings like "نامشخص"
-${category.prompts.map(prompt => prompt.field === "basePrice" ? "- important points:" + prompt.context.toString() : null)}
+${category.prompts?.map(prompt => prompt.field === "basePrice" ? prompt.context.toString() : null)}
 
 score:
 - DO NOT include this field at all
@@ -139,35 +111,33 @@ category:
 attributes:
 - Keys MUST exactly match category attribute names
 - Respect type strictly:
-  - string → string
-  - number → number
-  - select → ARRAY of strings (string[])
+- string → string
+- number → number
+- select → ARRAY of strings (string[])
 - For select attributes:
-  - Output value MUST be an array of strings
-  - Each value MUST be one of allowed values
-  - If raw content explicitly lists multiple values for a select attribute
-  (e.g. "L2L3L4", "L2 / L3 / L4", "Available in L2, L3 and L4"):
-  - Output ALL detected values as an array
-  - Preserve original order if possible
-  - Even single selections MUST be wrapped in an array
+- Output value MUST be an array of strings
+- Each value MUST be one of allowed values
+- If raw content explicitly lists multiple values for a select attribute
+(e.g. "L2L3L4", "L2 / L3 / L4", "Available in L2, L3 and L4"):
+- Output ALL detected values as an array
+- Preserve original order if possible
+- Even single selections MUST be wrapped in an array
 - If value is NOT found in content:
   - If required → infer logically
   - If not required → omit the key
-
+  
   Example:
-Raw content:
-"Grip sizes: L2L3L4"
-
+  Raw content:
+  "Grip sizes: L2L3L4"
+  
 Correct attributes output:
 "attributes": {
   "grip": ["L2", "L3", "L4"]
-}
-
-
-tag:
-- Persian keywords
-- Array of short strings
-- Useful for search
+  }
+  
+  
+  tag:
+  ${category.prompts?.map(prompt => prompt.field === "tag" ? prompt.context.toString() : null)}
 
 mainImage:
 - Direct image URL if available
