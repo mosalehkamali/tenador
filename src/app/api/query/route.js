@@ -1,113 +1,124 @@
 import { NextResponse } from "next/server";
 import connectToDB from "base/configs/db";
 
+// وارد کردن تمام مدل‌ها برای جلوگیری از MissingSchemaError
 import Brand from "base/models/Brand";
 import Sport from "base/models/Sport";
 import Athlete from "base/models/Athlete";
 import Product from "base/models/Product";
 import Category from "base/models/Category";
+import Serie from "base/models/Serie";
 
 export async function POST(req) {
-  await connectToDB();
+  try {
+    await connectToDB();
 
-  const body = await req.json();
-  const slugArray = body.slugs || [];
+    const body = await req.json();
+    const slugArray = body.slugs || [];
 
-  const search = {
-    brand: null,
-    sport: null,
-    athlete: null,
-    category: null,
-    product: null,
-  };
+    // مخزن ذخیره موجودیت‌های یافت شده
+    const search = {
+      brand: null,
+      sport: null,
+      athlete: null,
+      category: null,
+      product: null,
+    };
 
-  // ----------- 1) پردازش Query Params -----------
-  const { searchParams } = new URL(req.url);
+    // ----------- ۱) پردازش Query Params (اولویت اول) -----------
+    const { searchParams } = new URL(req.url);
+    const entities = ["brand", "sport", "athlete", "category", "product"];
+    const models = { 
+      brand: Brand, 
+      sport: Sport, 
+      athlete: Athlete, 
+      category: Category, 
+      product: Product 
+    };
 
-  if (searchParams.get("brand")) {
-    search.brand = await Brand.findOne({ slug: searchParams.get("brand") }).lean();
-  }
-
-  if (searchParams.get("sport")) {
-    search.sport = await Sport.findOne({ slug: searchParams.get("sport") }).lean();
-  }
-
-  if (searchParams.get("athlete")) {
-    search.athlete = await Athlete.findOne({ slug: searchParams.get("athlete") }).lean();
-  }
-
-  if (searchParams.get("category")) {
-    search.category = await Category.findOne({ slug: searchParams.get("category") }).lean();
-  }
-
-  if (searchParams.get("product")) {
-    search.product = await Product.findOne({ slug: searchParams.get("product") }).lean();
-  }
-
-  // ----------- 2) پردازش Slugs هوشمند -----------
-  for (const slug of slugArray) {
-    if (!search.brand) {
-      const doc = await Brand.findOne({ slug }).lean();
-      if (doc) {
-        search.brand = doc;
-        continue;
+    for (const entity of entities) {
+      const querySlug = searchParams.get(entity);
+      if (querySlug) {
+        search[entity] = await models[entity].findOne({ slug: querySlug }).lean();
       }
     }
 
-    if (!search.sport) {
-      const doc = await Sport.findOne({ slug }).lean();
-      if (doc) {
-        search.sport = doc;
-        continue;
+    // ----------- ۲) پردازش Slugs هوشمند (اولویت دوم) -----------
+    // این بخش به ترتیب اسلاگ‌های آرایه را در مدل‌های مختلف جستجو می‌کند
+    for (const slug of slugArray) {
+      for (const entity of entities) {
+        if (!search[entity]) {
+          const doc = await models[entity].findOne({ slug }).lean();
+          if (doc) {
+            search[entity] = doc;
+            break; // اگر در این مدل پیدا شد، برو سراغ اسلاگ بعدی در آرایه اصلی
+          }
+        }
       }
     }
 
-    if (!search.athlete) {
-      const doc = await Athlete.findOne({ slug }).lean();
-      if (doc) {
-        search.athlete = doc;
-        continue;
-      }
+    // ----------- ۳) محاسبات آماری پیشرفته (تعداد محصولات) -----------
+    let brandStats = null;
+
+    if (search.brand) {
+      // الف) شمارش کل محصولات متعلق به این برند
+      const totalBrandProducts = await Product.countDocuments({ brand: search.brand._id });
+
+      // ب) دریافت تمام سری‌های این برند و شمارش محصولات هر کدام
+      // ما برند را دوباره پیدا می‌کنیم تا سری‌های populate شده را بگیریم
+      const fullBrand = await Brand.findById(search.brand._id)
+        .populate("series")
+        .lean();
+
+      const seriesWithCounts = await Promise.all(
+        (fullBrand.series || []).map(async (serie) => {
+          const count = await Product.countDocuments({ serie: serie._id });
+          return {
+            ...serie,
+            productCount: count
+          };
+        })
+      );
+
+      brandStats = {
+        ...search.brand,
+        totalProductCount: totalBrandProducts,
+        series: seriesWithCounts
+      };
     }
 
-    if (!search.category) {
-      const doc = await Category.findOne({ slug }).lean();
-      if (doc) {
-        search.category = doc;
-        continue;
-      }
-    }
+    // ----------- ۴) ساخت فیلتر نهایی برای کوئری محصولات -----------
+    const finalFilter = {};
+    if (search.brand) finalFilter.brand = search.brand._id;
+    if (search.sport) finalFilter.sport = search.sport._id;
+    if (search.athlete) finalFilter.athlete = search.athlete._id;
+    if (search.category) finalFilter.category = search.category._id;
+    if (search.product) finalFilter._id = search.product._id;
 
-    if (!search.product) {
-      const doc = await Product.findOne({ slug }).lean();
-      if (doc) {
-        search.product = doc;
-        continue;
-      }
-    }
+    // ----------- ۵) اجرای کوئری نهایی محصولات -----------
+    const products = await Product.find(finalFilter)
+      .populate("brand sport athlete category serie")
+      .sort({ createdAt: -1 }) // جدیدترین‌ها اول
+      .lean();
+
+    // ----------- ۶) پاسخ نهایی -----------
+    return NextResponse.json({
+      filters: {
+        brand: brandStats || search.brand,
+        sport: search.sport,
+        athlete: search.athlete,
+        category: search.category,
+        product: search.product,
+      },
+      results: products,
+      totalResults: products.length
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error("❌ API ERROR:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error", message: error.message },
+      { status: 500 }
+    );
   }
-
-  // ----------- 3) ساخت فیلتر نهایی -----------
-  const finalFilter = {};
-
-  if (search.brand) finalFilter.brand = search.brand._id;
-  if (search.sport) finalFilter.sport = search.sport._id;
-  if (search.athlete) finalFilter.athlete = search.athlete._id;
-  if (search.category) finalFilter.category = search.category._id;
-  if (search.product) finalFilter._id = search.product._id;
-
-  const products = await Product.find(finalFilter)
-    .populate("brand sport athlete category")
-    .lean();
-
-  return NextResponse.json({
-    filters: {
-      brand: search.brand,
-      sport: search.sport,
-      athlete: search.athlete,
-      category: search.category,
-      product: search.product,
-    },
-    results: products,
-  });
 }

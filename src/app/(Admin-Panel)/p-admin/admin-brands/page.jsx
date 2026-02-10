@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  FaPlus, FaEdit, FaTrash, FaGlobeAmericas, 
-  FaCalendarCheck, FaSearch, FaArrowRight, FaShieldAlt 
+import {
+  FaPlus, FaEdit, FaTrash, FaGlobeAmericas,
+  FaCalendarCheck, FaSearch, FaArrowRight, FaShieldAlt
 } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
@@ -55,7 +55,7 @@ export default function AdminBrands() {
     }
   };
 
-  const filteredBrands = brands.filter(b => 
+  const filteredBrands = brands.filter(b =>
     b.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -77,7 +77,7 @@ export default function AdminBrands() {
             <div className="flex items-center gap-3">
               <div className="relative group">
                 <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--color-primary)] transition-colors" />
-                <input 
+                <input
                   type="text"
                   placeholder="جستجوی برند..."
                   className="bg-white border-2 border-gray-50 pr-11 pl-4 py-3 rounded-2xl w-64 focus:border-[var(--color-secondary)] outline-none transition-all shadow-sm text-sm"
@@ -113,20 +113,22 @@ export default function AdminBrands() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {filteredBrands.map((brand) => (
               <div key={brand._id} className="group relative bg-white rounded-[2.5rem] p-6 border border-gray-50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
-                
+
                 {/* Background Pattern */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-primary)]/5 rounded-bl-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
 
                 {/* Logo Display */}
-                <div className="relative mb-8 flex justify-center mt-4">
-                  <div className="w-24 h-24 bg-white rounded-3xl shadow-inner border border-gray-50 flex items-center justify-center overflow-hidden p-4 group-hover:scale-110 transition-transform">
-                    {brand.logo ? (
-                      <img src={brand.logo} alt={brand.name} className="w-full h-full object-contain" />
-                    ) : (
-                      <span className="text-3xl font-black text-gray-200">{brand.name?.[0]}</span>
-                    )}
+                <Link href={`admin-brands/${brand._id}`}>
+                  <div className="relative mb-8 flex justify-center mt-4">
+                    <div className="w-24 h-24 bg-white rounded-3xl shadow-inner border border-gray-50 flex items-center justify-center overflow-hidden p-4 group-hover:scale-110 transition-transform">
+                      {brand.logo ? (
+                        <img src={brand.logo} alt={brand.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="text-3xl font-black text-gray-200">{brand.name?.[0]}</span>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </Link>
 
                 {/* Brand Info */}
                 <div className="text-center mb-8 relative z-10">

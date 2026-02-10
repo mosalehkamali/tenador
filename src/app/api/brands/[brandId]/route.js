@@ -6,7 +6,8 @@ export async function GET(req, { params }) {
   try {
     await connectToDB();
     const { brandId } = await params;
-    const brand = await Brand.findById(brandId);
+    
+    const brand = await Brand.findById(brandId).populate("series");
     
     if (!brand) {
       return NextResponse.json(
@@ -17,6 +18,8 @@ export async function GET(req, { params }) {
 
     return NextResponse.json({ brand });
   } catch (error) {
+    console.log(error);
+    
     return NextResponse.json(
       { error: error.message },
       { status: 500 }

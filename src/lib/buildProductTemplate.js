@@ -1,17 +1,10 @@
-/**
- * Build a strict, enterprise-grade product creation prompt for ChatGPT
- * Output MUST be a clean JSON object usable directly for Product.create()
- */
-
 export function buildProductTemplate({ category, brands, sports, rawContent }) {
   if (!category) throw new Error("Category is required");
   if (!rawContent || rawContent.trim().length < 50) {
     throw new Error("Raw product content is too short");
   }
 
-  // -----------------------------
   // 1. Category attribute rules
-  // -----------------------------
   const attributeInstructions = category.attributes
     .map((attr) => {
       let line = `- ${attr.name}
@@ -29,9 +22,7 @@ export function buildProductTemplate({ category, brands, sports, rawContent }) {
     })
     .join("\n\n");
 
-  // -----------------------------
-  // 2. Brand & Sport context
-  // -----------------------------
+  // 2. Brand & Sport & Serie context
   const brandList = brands.map((b) => ({
     id: b._id.toString(),
     name: b.name,
@@ -42,9 +33,16 @@ export function buildProductTemplate({ category, brands, sports, rawContent }) {
     name: s.name,
   }));
 
-  // -----------------------------
+  // استخراج تمام سری‌ها از داخل برندهای پاپیولیت شده
+  const serieList = brands.flatMap((b) => 
+    (b.series || []).map((ser) => ({
+      id: ser._id.toString(),
+      name: ser.title || ser.name, // اولویت با عنوان فارسی
+      brandName: b.name // برای کمک به AI در تشخیص بهتر
+    }))
+  );
+
   // 3. Final Prompt
-  // -----------------------------
   return `
 You are a senior Persian e-commerce product manager AI.
 
@@ -59,7 +57,7 @@ GLOBAL RULES (ABSOLUTE)
 - NO comments
 - NO extra fields
 - Language: PERSIAN (fa-IR)
-- Think carefully before choosing brand and sport
+- Think carefully before choosing brand, sport and serie
 - Do NOT hallucinate information
 
 ===============================
@@ -79,8 +77,6 @@ FIELD RULES (VERY IMPORTANT)
 name:
 ${category.prompts?.map(prompt => prompt.field === "name" ? prompt.context.toString() : null)}
 
-modelName:
-${category.prompts?.map(prompt => prompt.field === "modelName" ? prompt.context.toString() : null)}
 
 shortDescription:
 ${category.prompts?.map(prompt => prompt.field === "shortDescription" ? prompt.context.toString() : null)}
@@ -100,6 +96,12 @@ score:
 brand:
 - Choose ONE brandId ONLY from provided list
 - Match by semantic meaning, NOT guessing
+
+serie:
+- Choose ONE serieId ONLY from provided AVAILABLE SERIES list.
+- **CRITICAL RULE**: The chosen "serie" MUST belong to the "brand" you selected. 
+- You ARE NOT ALLOWED to pick a series that has a different "parentBrandId" than your selected "brand".
+- If a series is mentioned in text but doesn't match the selected brand, prioritize the Brand and leave serie as an empty string "".
 
 sport:
 - Choose ONE sportId ONLY from provided list
@@ -135,7 +137,7 @@ Correct attributes output:
   "grip": ["L2", "L3", "L4"]
   }
   
-  
+ 
   tag:
   ${category.prompts?.map(prompt => prompt.field === "tag" ? prompt.context.toString() : null)}
 
@@ -167,6 +169,11 @@ AVAILABLE SPORTS
 ${JSON.stringify(sportList, null, 2)}
 
 ===============================
+AVAILABLE SERIES (Mapped from Brands)
+===============================
+${JSON.stringify(serieList, null, 2)}
+
+===============================
 RAW PRODUCT CONTENT
 ===============================
 ${rawContent}
@@ -176,13 +183,13 @@ REQUIRED OUTPUT JSON STRUCTURE
 ===============================
 {
   "name": "",
-  "modelName": "",
   "shortDescription": "",
   "longDescription": "",
   "suitableFor": "",
   "basePrice": 0,
-  "brand": "",
-  "sport": "",
+  "brand": "ID_FROM_BRANDS_LIST",
+  "serie": "ID_FROM_SERIES_LIST",
+  "sport": "ID_FROM_SPORTS_LIST",
   "category": "${category._id}",
   - attributes values MUST conform exactly to rules above
   - select attributes MUST always be arrays, never strings

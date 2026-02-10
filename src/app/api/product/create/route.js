@@ -69,7 +69,6 @@ export async function POST(req) {
 
     const {
       name,
-      modelName,
       shortDescription,
       longDescription,
       suitableFor,
@@ -79,6 +78,7 @@ export async function POST(req) {
       mainImage,
       gallery,
       brand,
+      serie,
       athlete,
       sport,
       attributes,
@@ -89,7 +89,6 @@ export async function POST(req) {
     ------------------------------- */
     const requiredFields = {
       name,
-      modelName,
       shortDescription,
       longDescription,
       suitableFor,
@@ -168,7 +167,6 @@ export async function POST(req) {
     ------------------------------- */
     const product = await Product.create({
       name,
-      modelName,
       shortDescription,
       longDescription,
       suitableFor,
@@ -183,6 +181,7 @@ export async function POST(req) {
       mainImage: normalizedMainImage,
       gallery: normalizedGallery,
       brand,
+      serie,
       athlete: athlete || null,
       sport,
       attributes: attributes || {},
@@ -198,6 +197,7 @@ export async function POST(req) {
 
   } catch (err) {
     console.error(err);
+    console.log(err);
     return Response.json(
       {
         error: "Internal server error",

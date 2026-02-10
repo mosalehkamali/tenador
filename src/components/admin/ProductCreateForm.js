@@ -41,7 +41,6 @@ export default function ProductCreateForm({ initialData = {} }) {
 
   const [formData, setFormData] = useState({
     name: '',
-    modelName: '',
     shortDescription: '',
     longDescription: '',
     suitableFor: '',
@@ -51,6 +50,7 @@ export default function ProductCreateForm({ initialData = {} }) {
     mainImage: '',
     gallery: [],
     brand: '',
+    serie: '',
     athlete: '',
     sport: '',
     attributes: {},
@@ -78,7 +78,9 @@ export default function ProductCreateForm({ initialData = {} }) {
     const sportsData = await sportsRes.json();
     const brandsData = await brandsRes.json();
     const categoriesData = await categoriesRes.json();
-
+    if (brandsData.series) {
+      updateField('serie', brandsData.series);
+    }
     setSports(sportsData.sports || []);
     setBrands(brandsData.brands || []);
     setCategories(categoriesData.categories || []);
@@ -195,11 +197,6 @@ export default function ProductCreateForm({ initialData = {} }) {
           value={formData.name}
           onChange={e => updateField('name', e.target.value)}
         />
-        <Input
-          label="مدل"
-          value={formData.modelName}
-          onChange={e => updateField('modelName', e.target.value)}
-        />
       </div>
 
       <Textarea
@@ -222,6 +219,18 @@ export default function ProductCreateForm({ initialData = {} }) {
           onChange={e => updateField('brand', e.target.value)}
           options={brands.map(b => ({ value: b._id, label: b.name }))}
         />
+        {formData.brand && (
+          <Select
+            label="سری (Series)"
+            value={formData.serie}
+            onChange={e => updateField('serie', e.target.value)}
+            options={
+              brands
+                .find(b => b._id === formData.brand) // پیدا کردن برند انتخاب شده
+                ?.series?.map(s => ({ value: s._id, label: s.name })) || [] // نقشه زدن روی سری‌های آن برند
+              }
+              />
+        )}
 
         <Select
           label="ورزش"

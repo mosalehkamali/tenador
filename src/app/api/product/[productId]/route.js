@@ -76,7 +76,6 @@ export async function PUT(req, { params }) {
 
     const resolvedParams = await params;
     const productId = resolvedParams.productId || resolvedParams.id;
-    console.log(productId);
     
     const body = await req.json();
 
@@ -90,7 +89,6 @@ export async function PUT(req, { params }) {
 
     const {
       name,
-      modelName,
       shortDescription,
       longDescription,
       suitableFor,
@@ -100,6 +98,7 @@ export async function PUT(req, { params }) {
       mainImage,
       gallery,
       brand,
+      serie,
       athlete,
       sport,
       attributes,
@@ -146,8 +145,16 @@ export async function PUT(req, { params }) {
     // -------------------------
     if (brand) {
       const exists = await Brand.findById(brand);
-      if (!exists)
+      if (!exists) {
         return NextResponse.json({ error: "برند نامعتبر است" }, { status: 400 });
+      } else {
+        if (serie) {
+          const isSerieValid = exists.series.some(s => s.toString() === serie.toString());
+          if (!isSerieValid) { 
+            return NextResponse.json({ error: "سری متعلق به این برند نیست یا نامعتبر است" }, { status: 400 });
+          }
+        }
+      }
     }
 
     if (sport) {
@@ -166,7 +173,6 @@ export async function PUT(req, { params }) {
     // Update Fields
     // -------------------------
     if (name !== undefined) product.name = name.trim();
-    if (modelName !== undefined) product.modelName = modelName.trim();
     if (shortDescription !== undefined)
       product.shortDescription = shortDescription.trim();
     if (longDescription !== undefined)
@@ -213,6 +219,7 @@ export async function PUT(req, { params }) {
     }
 
     if (brand !== undefined) product.brand = brand;
+    if (serie) {product.serie = serie}else{product.serie = null}  ;
     if (athlete !== undefined) product.athlete = athlete || null;
     if (sport !== undefined) product.sport = sport;
 
@@ -222,6 +229,7 @@ export async function PUT(req, { params }) {
 
     const populatedProduct = await Product.findById(product._id)
       .populate("brand")
+      .populate("serie")
       .populate("sport")
       .populate("athlete")
       .populate("category")

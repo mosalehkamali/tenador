@@ -43,7 +43,6 @@ export default function AdminLayout({ children, title = 'داشبورد مدیر
             {sidebarOpen && (
               <div className="flex flex-col">
                 <span className="text-xl font-black text-gray-800 tracking-tighter">TENADOR <span className="text-[var(--color-primary)]">ADMIN</span></span>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Version 3.0.1</span>
               </div>
             )}
             <button
@@ -106,12 +105,10 @@ export default function AdminLayout({ children, title = 'داشبورد مدیر
         {/* Modern Header */}
         <header className="h-24 flex items-center justify-between px-8 sticky top-0 z-40">
            <div className="flex flex-col">
-              <p className="text-xs font-bold text-gray-400 mb-1">صفحات / {title}</p>
-              <h1 className="text-2xl font-black text-gray-800 tracking-tight">{title}</h1>
            </div>
 
            {/* Top Actions */}
-           <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md p-2 rounded-[1.5rem] border border-white shadow-sm">
+           <div className="flex items-center gap-4 p-2  bg-white/60 backdrop-blur-md p-2 rounded-[1.5rem] border border-white shadow-sm">
               <div className="flex items-center gap-3 px-3">
                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[var(--color-primary)] to-[var(--color-secondary)] p-[2px]">
                     <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center overflow-hidden">

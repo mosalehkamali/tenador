@@ -5,7 +5,6 @@ const ProductSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
 
-    modelName: { type: String, required: true },
 
     shortDescription: { type: String, required: true },
 
@@ -40,6 +39,11 @@ const ProductSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Brand",
       required: true,
+    },
+
+    serie: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Serie"
     },
 
     athlete: {

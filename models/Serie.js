@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 import { createSlug } from "base/utils/slugify";
-import Serie from "base/models/Serie";
-
 const schema = new mongoose.Schema(
   {
     name: {
@@ -22,20 +20,14 @@ const schema = new mongoose.Schema(
       required: true,
     },
 
-
-    country: {
-      type: String,
-      default: null,
-    },
-
-    foundedYear: {
-      type: Number,
-      default: null,
-    },
-
     description: {
       type: String,
       default: "",
+    },
+
+    colors:{
+      primary:String,
+      secondary:String,
     },
 
     logo: {
@@ -53,12 +45,11 @@ const schema = new mongoose.Schema(
       default: "",
     },
     
-    series: [
-      {
+    brand: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Serie",
-      }
-    ],
+        ref: "Brand",
+        required:true
+      },
 
 
     slug: {
@@ -75,11 +66,11 @@ schema.pre("save", async function () {
     const baseSlug = createSlug(this.name);
     let slug = baseSlug;
     let counter = 1;
-    while (await mongoose.models.Brand.findOne({ slug })) {
+    while (await mongoose.models.Serie.findOne({ slug })) {
       slug = `${baseSlug}-${counter++}`;
     }
     this.slug = slug;
   }
 });
 
-export default mongoose.models.Brand || mongoose.model("Brand", schema);
+export default mongoose.models.Serie || mongoose.model("Serie", schema);

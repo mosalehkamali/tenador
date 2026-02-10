@@ -26,7 +26,7 @@ export async function POST(req) {
     }
 
     // 2. Load ALL brands & sports (real behavior)
-    const brands = await Brand.find({}, { name: 1 }).lean();
+    const brands = await Brand.find({}, { name: 1 }).populate("series").lean();
     const sports = await Sport.find({}, { name: 1 }).lean();
 
     if (!brands.length || !sports.length) {
