@@ -231,6 +231,44 @@ Correct name output:
     }
   };
 
+  const handleParentChange = (parentId) => {
+    if (!parentId) {
+      // اگر روی حالت "بدون والد" ست شد، فیلدها را پاک نمی‌کنیم (اختیاری) یا ریست می‌کنیم
+      setFormData(prev => ({ ...prev, parent: '' }));
+      return;
+    }
+
+    // ۱. پیدا کردن آبجکت کامل دسته والد از لیست موجود
+    const selectedParent = categories.find(cat => cat._id === parentId);
+
+    if (selectedParent) {
+      // ۲. کپی کردن اتریبیوت‌ها (با تولید ID جدید برای جلوگیری از تداخل در Drag & Drop)
+      const inheritedAttributes = (selectedParent.attributes || []).map(attr => ({
+        ...attr,
+        id: `attr-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`,
+      }));
+
+      // ۳. کپی کردن پرامپت‌ها
+      // اگر دسته والد پرامپت داشت، جایگزین پرامپت‌های فعلی می‌کنیم
+      if (selectedParent.prompts && selectedParent.prompts.length > 0) {
+        const newPrompts = productPrompts.map(p => {
+          const parentContext = selectedParent.prompts.find(pp => pp.field === p.field);
+          return parentContext ? { ...p, context: parentContext.context } : p;
+        });
+        setProductPrompts(newPrompts);
+      }
+
+      // ۴. بروزرسانی فرم (بدون ذخیره کردن parent ID طبق خواسته شما)
+      setFormData(prev => ({
+        ...prev,
+        parent: '', // خالی می‌ماند تا در دیتابیس ذخیره نشود
+        attributes: inheritedAttributes
+      }));
+
+      showToast.success(`اطلاعات از دسته "${selectedParent.title}" کپی شد`);
+    }
+  };
+
   const normalizeOrders = (attrs) => {
     return attrs.map((attr, index) => ({
       ...attr,
@@ -395,7 +433,7 @@ Correct name output:
                 value={formData.title}
                 onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                 required
-                placeholder="مثال: گوشی هوشمند"
+                placeholder="مثال: راکت"
               />
 
               <Input
@@ -404,7 +442,7 @@ Correct name output:
                 value={formData.name}
                 onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                 required
-                placeholder="smart-phones"
+                placeholder="racket"
                 pattern="^[a-zA-Z0-9\s\-_]+$"
               />
             </div>
@@ -413,7 +451,7 @@ Correct name output:
               label="دسته والد"
               name="parent"
               value={formData.parent}
-              onChange={(e) => setFormData((prev) => ({ ...prev, parent: e.target.value }))}
+              onChange={(e) => handleParentChange(e.target.value)}
               options={categories.map((cat) => ({ value: cat._id, label: cat.title }))}
               placeholder="بدون والد (دسته اصلی)"
             />

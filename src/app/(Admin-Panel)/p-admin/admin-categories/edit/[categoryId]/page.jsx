@@ -215,6 +215,50 @@ export default function EditCategory() {
     }
   };
 
+  const handleParentChange = (parentId) => {
+  if (!parentId) {
+    setFormData(prev => ({ ...prev, parent: '' }));
+    return;
+  }
+
+  const selectedParent = categories.find(cat => cat._id === parentId);
+
+  if (selectedParent) {
+    const inheritedAttributes = (selectedParent.attributes || []).map((attr, index) => ({
+      ...attr,
+      id: `attr-child-${Math.random().toString(36).substr(2, 5)}-${Date.now()}-${index}`,
+      order: formData.attributes.length + index + 1
+    }));
+
+    if (selectedParent.prompts && selectedParent.prompts.length > 0) {
+      setProductPrompts(prevPrompts => {
+        return prevPrompts.map(currentPrompt => {
+          const parentPrompt = selectedParent.prompts.find(p => p.field === currentPrompt.field);
+          
+          if (parentPrompt && parentPrompt.context.trim() !== '') {
+            const separator = "\n\n------\n";
+            if (!currentPrompt.context.includes(parentPrompt.context)) {
+              return {
+                ...currentPrompt,
+                context: `${currentPrompt.context}${currentPrompt.context ? separator : ''}${parentPrompt.context}`
+              };
+            }
+          }
+          return currentPrompt;
+        });
+      });
+    }
+
+    // ۳. بروزرسانی formData (ترکیب اتریبیوت‌های قدیمی و جدید)
+    setFormData(prev => ({
+      ...prev,
+      parent: '', // طبق درخواست شما والد ذخیره نمی‌شود
+      attributes: [...prev.attributes, ...inheritedAttributes]
+    }));
+
+    showToast.success(`اطلاعات دسته "${selectedParent.title}" به لیست فعلی اضافه شد`);
+  }
+};
   const normalizeOrders = (attrs) => {
     return attrs.map((attr, index) => ({
       ...attr,
@@ -375,7 +419,7 @@ export default function EditCategory() {
             <Select
               label="دسته والد"
               value={formData.parent}
-              onChange={(e) => setFormData((prev) => ({ ...prev, parent: e.target.value }))}
+              onChange={(e) => handleParentChange(e.target.value)}
               options={categories.filter(c => c._id !== categoryId).map((cat) => ({ value: cat._id, label: cat.title }))}
               placeholder="دسته اصلی"
             />
