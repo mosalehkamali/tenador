@@ -15,6 +15,12 @@ const ProductSchema = new mongoose.Schema(
     score: { type: Number, default: 0 },
 
     basePrice: { type: Number, default: 0 },
+    
+    label: {
+      type: String, 
+      enum: ["none", "new", "hot", "discount", "limited"], 
+      default: "none"
+    },
 
     category: {
       type: mongoose.Schema.Types.ObjectId,
@@ -43,7 +49,8 @@ const ProductSchema = new mongoose.Schema(
 
     serie: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Serie"
+      ref: "Serie",
+      default: null,
     },
 
     athlete: {

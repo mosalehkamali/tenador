@@ -90,6 +90,9 @@ ${category.prompts?.map(prompt => prompt.field === "suitableFor" ? prompt.contex
 basePrice:
 ${category.prompts?.map(prompt => prompt.field === "basePrice" ? prompt.context.toString() : null)}
 
+label:
+${category.prompts?.map(prompt => prompt.field === "label" ? prompt.context.toString() : null)}
+
 score:
 - DO NOT include this field at all
 

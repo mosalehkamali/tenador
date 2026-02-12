@@ -48,6 +48,8 @@ export async function POST(req) {
           folder,
           resource_type: "image",
           allowed_formats: ["jpg", "jpeg", "png", "webp", "svg"],
+          use_filename: true, 
+          unique_filename: true,
         },
         (error, result) => {
           if (error) reject(error);

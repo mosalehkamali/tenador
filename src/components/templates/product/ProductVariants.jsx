@@ -24,7 +24,7 @@ const ProductVariants = ({ variants = [] }) => {
           </label>
 
           <div className="flex flex-wrap gap-2">
-            {variant.value.map((val,index) => {
+            {variant.value?.map((val,index) => {
               const isActive = selected[variant.type] === val;
 
               return (

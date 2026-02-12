@@ -10,7 +10,10 @@ const ProductDescription = ({ description }) => {
         sm:text-base
       "
     >
-      {description}
+      <div 
+      className="prose prose-blue max-w-none text-justify" 
+      dangerouslySetInnerHTML={{ __html: description }} 
+    />
     </div>
   );
 };

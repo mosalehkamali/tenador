@@ -141,10 +141,13 @@ Correct name output:
       `
     },
     {
-      field: 'modelName',
-      context: `- Technical or commercial model serie identifier
-- Can be English or mixed (e.g. "Air Zoom Pegasus 40")
-- mandatory , note that series is not full model , is considered like “T-Fight” and not “T-Fight 300S”
+      field: 'label',
+      context: `- Choose ONE value ONLY from: ["none", "new", "hot", "discount", "limited"]
+- If the text mentions things like "جدید" or "۲۰۲۴/۲۰۲۵" -> "new"
+- If it's a best-seller or "پرفروش" -> "hot"
+- If there is a clear discount mentioned in raw text -> "discount"
+- If it says "تعداد محدود" or "نسخه محدود" -> "limited"
+- DEFAULT is "none" if no specific label is detected.
       `
     },
     {

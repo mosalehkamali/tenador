@@ -129,7 +129,7 @@ export default function EditCategory() {
 
   const productFields = [
     'name',
-    'modelName',
+    'label',
     'shortDescription',
     'longDescription',
     'suitableFor',

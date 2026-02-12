@@ -54,6 +54,7 @@ export default function ProductCreateForm({ initialData = {} }) {
     athlete: '',
     sport: '',
     attributes: {},
+    label: 'none',
     ...initialData,
   });
 
@@ -161,6 +162,7 @@ export default function ProductCreateForm({ initialData = {} }) {
         basePrice: Number(formData.basePrice) || 0,
         tag: formData.tag || [],
         athlete: formData.athlete || null,
+        label: formData.label,
       };
 
       const res = await fetch('/api/product/create', {
@@ -228,8 +230,8 @@ export default function ProductCreateForm({ initialData = {} }) {
               brands
                 .find(b => b._id === formData.brand) // پیدا کردن برند انتخاب شده
                 ?.series?.map(s => ({ value: s._id, label: s.name })) || [] // نقشه زدن روی سری‌های آن برند
-              }
-              />
+            }
+          />
         )}
 
         <Select
@@ -263,6 +265,19 @@ export default function ProductCreateForm({ initialData = {} }) {
           type="number"
           value={formData.basePrice}
           onChange={e => updateField('basePrice', e.target.value)}
+        />
+
+        <Select
+          label="برچسب محصول (Label)"
+          value={formData.label}
+          onChange={e => updateField('label', e.target.value)}
+          options={[
+            { value: 'none', label: 'بدون برچسب' },
+            { value: 'new', label: 'جدید' },
+            { value: 'hot', label: 'پرطرفدار' },
+            { value: 'discount', label: 'تخفیف ویژه' },
+            { value: 'limited', label: 'تعداد محدود' },
+          ]}
         />
       </div>
 

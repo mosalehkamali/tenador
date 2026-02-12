@@ -31,7 +31,7 @@ export default function ProductEditPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.productId; // دریافت آیدی از URL
-  
+
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
 
@@ -55,6 +55,7 @@ export default function ProductEditPage() {
     athlete: '',
     sport: '',
     attributes: {},
+    label: 'none',
   });
 
   // ---------------------------
@@ -81,7 +82,7 @@ export default function ProductEditPage() {
         setSports(sportsData.sports || []);
         setBrands(brandsData.brands || []);
         setCategories(categoriesData.categories || []);
-        
+
         if (productData.product) {
           const p = productData.product;
           setFormData({
@@ -92,6 +93,7 @@ export default function ProductEditPage() {
             athlete: p.athlete?._id || p.athlete,
             category: p.category?._id || p.category,
             tag: Array.isArray(p.tag) ? p.tag.join(', ') : p.tag,
+            label: p.label || 'none',
           });
         }
       } catch (err) {
@@ -183,7 +185,7 @@ export default function ProductEditPage() {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-20">
-      
+
       {/* Header */}
       <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
         <div className="flex items-center gap-4">
@@ -206,7 +208,7 @@ export default function ProductEditPage() {
           <FaBox className="text-gray-400" />
           <h2 className="font-black text-gray-800">اطلاعات پایه</h2>
         </div>
-        
+
         <Input
           label="نام محصول"
           value={formData.name}
@@ -256,6 +258,18 @@ export default function ProductEditPage() {
             type="number"
             value={formData.basePrice}
             onChange={e => updateField('basePrice', e.target.value)}
+          />
+          <Select
+            label="برچسب محصول (Label)"
+            value={formData.label}
+            onChange={e => updateField('label', e.target.value)}
+            options={[
+              { value: 'none', label: 'بدون برچسب' },
+              { value: 'new', label: 'جدید' },
+              { value: 'hot', label: 'پرطرفدار' },
+              { value: 'discount', label: 'تخفیف ویژه' },
+              { value: 'limited', label: 'تعداد محدود' },
+            ]}
           />
         </div>
 

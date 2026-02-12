@@ -42,9 +42,13 @@ function extractPublicId(url) {
 async function renameCloudinaryImage(imageUrl, sku, index = null) {
   if (!imageUrl) return null;
 
+  if (imageUrl.includes(sku)) {
+    return imageUrl;
+  }
+  
   const oldPublicId = extractPublicId(imageUrl);
   const folder = oldPublicId.split("/").slice(0, -1).join("/");
-
+  try {
   const newPublicId =
     index !== null
       ? `${folder}/${sku}-${index}`
@@ -57,6 +61,10 @@ async function renameCloudinaryImage(imageUrl, sku, index = null) {
   );
 
   return result.secure_url;
+} catch (error) {
+  console.warn(`⚠️ Cloudinary Rename skipped for ${imageUrl}:`, error.message);
+  return imageUrl; 
+}
 }
 
 /* ----------------------------------
@@ -82,6 +90,7 @@ export async function POST(req) {
       athlete,
       sport,
       attributes,
+      label,
     } = body;
 
     /* -------------------------------
@@ -136,7 +145,7 @@ export async function POST(req) {
       for (const attr of foundCategory.attributes) {
         if (attr.required && attributes[attr.name] == null) {
           return Response.json(
-            { error: `Attribute "${attr.name}" is required` },
+            { error: `ویژگی "${attr.label}" را وارد کنید` },
             { status: 400 }
           );
         }
@@ -180,11 +189,12 @@ export async function POST(req) {
         : [],
       mainImage: normalizedMainImage,
       gallery: normalizedGallery,
-      brand,
-      serie,
-      athlete: athlete || null,
-      sport,
+      brand: brand || undefined,
+      serie: (serie && serie !== "") ? serie : undefined,
+      athlete: (athlete && athlete !== "") ? athlete : null,
+      sport: sport || undefined,
       attributes: attributes || {},
+      label: label || "none",
     });
 
     return Response.json(

@@ -53,11 +53,17 @@ export async function GET(req, { params }) {
     .populate('sport')
     .populate('athlete')
     .populate('category')
+    .populate('serie')
     .lean();
     
     if (!product) {
       return NextResponse.json({ error: "محصول پیدا نشد" }, { status: 404 });
     }
+
+    product.variants = product.variants || [];
+    product.tag = product.tag || [];
+    product.gallery = product.gallery || [];
+    product.attributes = product.attributes || {};
     
     // fallback to DB cache
     const priceDoc = await PriceCache.findOne({ productId }).lean();
@@ -102,6 +108,7 @@ export async function PUT(req, { params }) {
       athlete,
       sport,
       attributes,
+      label,
     } = body;
 
     // -------------------------
@@ -208,6 +215,18 @@ export async function PUT(req, { params }) {
       }
     }
 
+    if (label !== undefined) {
+      const allowedLabels = ["none", "new", "hot", "discount", "limited"];
+      
+      if (!allowedLabels.includes(label)) {
+        return NextResponse.json(
+          { error: "مقدار لیبل نامعتبر است" },
+          { status: 400 }
+        );
+      }
+      product.label = label;
+    }
+
     if (mainImage !== undefined) product.mainImage = mainImage;
     if (gallery !== undefined) {
       if (!Array.isArray(gallery))
@@ -218,10 +237,17 @@ export async function PUT(req, { params }) {
       product.gallery = gallery;
     }
 
-    if (brand !== undefined) product.brand = brand;
-    if (serie) {product.serie = serie}else{product.serie = null}  ;
-    if (athlete !== undefined) product.athlete = athlete || null;
-    if (sport !== undefined) product.sport = sport;
+    if (brand !== undefined) product.brand = brand || undefined;
+
+    if (serie !== undefined) {
+        product.serie = (serie && serie !== "") ? serie : null;
+    }
+    
+    if (athlete !== undefined) {
+        product.athlete = (athlete && athlete !== "") ? athlete : null;
+    }
+    
+    if (sport !== undefined) product.sport = sport || undefined;
 
     if (attributes !== undefined) product.attributes = attributes;
 
