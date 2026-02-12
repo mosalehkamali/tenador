@@ -3,20 +3,21 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { FaArrowRight, FaCloudUploadAlt, FaGlobeAmericas, FaCalendarAlt, FaCheckCircle, FaRocket, FaEdit } from 'react-icons/fa';
+import { FaArrowRight, FaCloudUploadAlt, FaGlobeAmericas, FaCalendarAlt, FaCheckCircle, FaRocket, FaEdit, FaParagraph, FaMagic } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 export default function EditBrand() {
   const router = useRouter();
   const { brandId } = useParams(); // دریافت ID از URL
-  
+
   const [loading, setLoading] = useState(true); // لودینگ اولیه صفحه
   const [saving, setSaving] = useState(false); // لودینگ دکمه ثبت
   const [uploading, setUploading] = useState({ logo: false, icon: false, image: false });
+  const defaultPromptFields = ['name', 'title', 'description'];
 
   const [formData, setFormData] = useState({
     name: '', title: '', country: '', foundedYear: '', description: '',
-    logo: '', icon: '', image: '',
+    logo: '', icon: '', image: '', prompts: [],
   });
 
   // ۱. دریافت اطلاعات برند برای ویرایش
@@ -26,7 +27,13 @@ export default function EditBrand() {
         const res = await fetch(`/api/brands/${brandId}`);
         const data = await res.json();
         if (!res.ok) throw new Error();
-        
+
+        const existingPrompts = data.brand.prompts || [];
+        const mergedPrompts = defaultPromptFields.map(field => {
+          const found = existingPrompts.find(p => p.field === field);
+          return found ? found : { field, context: '' };
+        });
+
         setFormData({
           name: data.brand.name || '',
           title: data.brand.title || '',
@@ -36,6 +43,7 @@ export default function EditBrand() {
           logo: data.brand.logo || '',
           icon: data.brand.icon || '',
           image: data.brand.image || '',
+          prompts: mergedPrompts,
         });
       } catch (err) {
         toast.error('خطا در بارگذاری اطلاعات برند');
@@ -47,6 +55,12 @@ export default function EditBrand() {
 
     if (brandId) fetchBrandData();
   }, [brandId, router]);
+
+  const handlePromptChange = (index, value) => {
+    const updatedPrompts = [...formData.prompts];
+    updatedPrompts[index].context = value;
+    setFormData({ ...formData, prompts: updatedPrompts });
+  };
 
   const uploadImage = async (file, field) => {
     if (!file) return;
@@ -72,8 +86,12 @@ export default function EditBrand() {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { ...formData, foundedYear: formData.foundedYear ? Number(formData.foundedYear) : null };
-      
+      const payload = { 
+        ...formData, 
+        foundedYear: formData.foundedYear ? Number(formData.foundedYear) : null,
+        prompts: formData.prompts.filter(p => p.context.trim() !== '')
+      };
+
       // ۲. تغییر متد به PUT برای ویرایش
       const res = await fetch(`/api/brands/${brandId}`, {
         method: 'PUT',
@@ -117,14 +135,14 @@ export default function EditBrand() {
 
       <main className="max-w-5xl mx-auto px-6">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* --- Right Column: Info --- */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/40">
               <h2 className="text-lg font-black text-gray-800 mb-6 flex items-center gap-2">
                 <span className="w-2 h-6 bg-[var(--color-primary)] rounded-full" /> ویرایش شناسنامه برند
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-black text-gray-400 mr-2 uppercase tracking-widest">نام سیستمی</label>
@@ -172,13 +190,40 @@ export default function EditBrand() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
+
+              <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/40">
+                <h2 className="text-lg font-black text-gray-800 mb-6 flex items-center gap-2">
+                  <FaMagic className="text-[var(--color-primary)]" /> ویرایش دستورالعمل‌های هوش مصنوعی
+                </h2>
+                <p className="text-[11px] text-gray-400 mb-6 font-bold leading-relaxed">
+                  این دستورالعمل‌ها به AI کمک می‌کنند تا مقادیر "سری‌های" زیرمجموعه این برند را دقیق‌تر تولید کند.
+                </p>
+
+                <div className="space-y-6">
+                  {formData.prompts.map((item, index) => (
+                    <div key={item.field} className="space-y-2 group">
+                      <label className="text-[10px] font-black text-gray-400 mr-2 uppercase flex items-center gap-1 group-focus-within:text-[var(--color-primary)] transition-colors">
+                        <FaParagraph size={10} /> دستورالعمل تولید {item.field}
+                      </label>
+                      <textarea
+                        dir='ltr'
+                        rows={3}
+                        placeholder={`مثلاً: نام سری‌های ${formData.title} باید کوتاه و ورزشی باشد...`}
+                        className="w-full text-left [direction:ltr] bg-gray-50 border-2 border-transparent focus:border-[var(--color-primary)] focus:bg-white rounded-2xl px-5 py-4 outline-none transition-all font-medium text-sm text-gray-600 shadow-sm resize-none"
+                        value={item.context}
+                        onChange={(e) => handlePromptChange(index, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Banner Update */}
             <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/40">
               <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-lg font-black text-gray-800">تصویر کاور برند</h2>
-                 {formData.image && <span className="text-[10px] font-black text-green-500 bg-green-50 px-3 py-1 rounded-full uppercase">تصویر فعلی موجود است</span>}
+                <h2 className="text-lg font-black text-gray-800">تصویر کاور برند</h2>
+                {formData.image && <span className="text-[10px] font-black text-green-500 bg-green-50 px-3 py-1 rounded-full uppercase">تصویر فعلی موجود است</span>}
               </div>
               <UploadField
                 url={formData.image}
@@ -194,10 +239,10 @@ export default function EditBrand() {
             <div className="bg-gray-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-primary)] opacity-10 blur-[50px] -mr-16 -mt-16"></div>
               <h2 className="text-lg font-black mb-8 flex items-center justify-between relative z-10">
-                Visual Assets 
+                Visual Assets
                 <FaEdit className="text-[var(--color-secondary)] opacity-50" />
               </h2>
-              
+
               <div className="space-y-10 relative z-10">
                 <div className="group">
                   <p className="text-[10px] font-black uppercase text-gray-500 mb-3 tracking-[0.2em] text-center group-hover:text-[var(--color-secondary)] transition-colors">Main Brand Logo</p>
@@ -208,7 +253,7 @@ export default function EditBrand() {
                     isSquare
                   />
                 </div>
-                
+
                 <div className="group">
                   <p className="text-[10px] font-black uppercase text-gray-500 mb-3 tracking-[0.2em] text-center group-hover:text-[var(--color-secondary)] transition-colors">Favicon / Icon</p>
                   <UploadField
@@ -226,9 +271,8 @@ export default function EditBrand() {
             <button
               type="submit"
               disabled={saving}
-              className={`w-full py-6 rounded-[2rem] font-black text-xl shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 group ${
-                saving ? 'bg-gray-800 text-gray-500' : 'bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white hover:shadow-[0_20px_40px_rgba(var(--color-primary-rgb),0.3)] hover:-translate-y-1'
-              }`}
+              className={`w-full py-6 rounded-[2rem] font-black text-xl shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 group ${saving ? 'bg-gray-800 text-gray-500' : 'bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white hover:shadow-[0_20px_40px_rgba(var(--color-primary-rgb),0.3)] hover:-translate-y-1'
+                }`}
             >
               {saving ? (
                 <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
@@ -236,7 +280,7 @@ export default function EditBrand() {
                 <>ذخیره تغییرات برند <FaRocket className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /></>
               )}
             </button>
-            
+
             <p className="text-[10px] text-center text-gray-400 font-bold uppercase tracking-widest px-4">
               آخرین ویرایش توسط سیستم در: {new Date().toLocaleDateString('fa-IR')}
             </p>
@@ -271,7 +315,7 @@ function UploadField({ url, loading, onSelect, isSquare, small, aspect = "aspect
             ) : (
               <>
                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm group-hover:scale-110 transition-transform">
-                    <FaCloudUploadAlt className="text-gray-300 group-hover:text-[var(--color-primary)] transition-colors text-2xl" />
+                  <FaCloudUploadAlt className="text-gray-300 group-hover:text-[var(--color-primary)] transition-colors text-2xl" />
                 </div>
                 {!small && <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">انتخاب فایل جدید</span>}
               </>
@@ -280,7 +324,7 @@ function UploadField({ url, loading, onSelect, isSquare, small, aspect = "aspect
         )}
         <input type="file" hidden accept="image/*" disabled={loading} onChange={(e) => onSelect(e.target.files[0])} />
       </label>
-      
+
       {url && !loading && (
         <div className="absolute -top-2 -right-2 bg-green-500 text-white w-7 h-7 rounded-full flex items-center justify-center shadow-xl border-2 border-white">
           <FaCheckCircle size={12} />

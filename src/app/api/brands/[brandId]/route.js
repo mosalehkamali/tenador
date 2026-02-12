@@ -16,10 +16,12 @@ export async function GET(req, { params }) {
       );
     }
 
+    brand.series = brand.series || [];
+    brand.prompts = brand.prompts || [];
+
     return NextResponse.json({ brand });
   } catch (error) {
     console.log(error);
-    
     return NextResponse.json(
       { error: error.message },
       { status: 500 }
@@ -32,7 +34,17 @@ export async function PUT(req, { params }) {
     await connectToDB();
     const { brandId } = await params;
     const body = await req.json();
-    const { name, country, foundedYear, description, logo } = body;
+   const { 
+      name, 
+      title, 
+      country, 
+      foundedYear, 
+      description, 
+      logo, 
+      icon, 
+      image, 
+      prompts 
+    } = body;
 
     const brand = await Brand.findById(brandId);
     if (!brand) {
@@ -42,20 +54,21 @@ export async function PUT(req, { params }) {
       );
     }
 
-    if (name && name.trim() !== "") {
-      brand.name = name.trim();
-    }
-    if (country !== undefined) {
-      brand.country = country;
-    }
-    if (foundedYear !== undefined) {
-      brand.foundedYear = foundedYear;
-    }
-    if (description !== undefined) {
-      brand.description = description;
-    }
-    if (logo !== undefined) {
-      brand.logo = logo;
+    if (name !== undefined) brand.name = name.trim();
+    if (title !== undefined) brand.title = title.trim();
+    if (country !== undefined) brand.country = country || null;
+    if (description !== undefined) brand.description = description.trim();
+    if (logo !== undefined) brand.logo = logo.trim();
+    if (icon !== undefined) brand.icon = icon.trim();
+    if (image !== undefined) brand.image = image.trim();
+
+    if (prompts !== undefined && Array.isArray(prompts)) {
+      brand.prompts = prompts
+        .filter(p => p.field && p.context) // حذف موارد ناقص
+        .map(p => ({
+          field: p.field.trim(),
+          context: p.context.trim()
+        }));
     }
 
     await brand.save();

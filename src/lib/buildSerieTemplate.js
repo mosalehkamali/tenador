@@ -1,11 +1,11 @@
-export function buildSerieTemplate({ brandId, brandName, rawContent }) {
+export function buildSerieTemplate({ brand, rawContent }) {
     if (!rawContent || rawContent.trim().length < 20) {
       throw new Error("محتوای خام برای پردازش کافی نیست.");
     }
   
     return `
   You are an expert E-commerce Catalog Architect specializing in sporting goods and fashion.
-  Your mission is to transform disorganized raw text into a structured JSON for a product "Serie" (Collection) belonging to the brand "${brandName}".
+  Your mission is to transform disorganized raw text into a structured JSON for a product "Serie" (Collection) belonging to the brand "${brand.name}".
   
   ===============================
   CORE RULES (NON-NEGOTIABLE)
@@ -15,17 +15,14 @@ export function buildSerieTemplate({ brandId, brandName, rawContent }) {
   3. **LANGUAGE SPLIT**: 
      - "title" and "description" MUST be in Persian (fa-IR).
      - "name" MUST be in English.
-  4. **BRAND INTEGRITY**: You MUST use the provided Brand ID: "${brandId}". Do not change it.
+  4. **BRAND INTEGRITY**: You MUST use the provided Brand ID: "${brand._id}". Do not change it.
   
   ===============================
   DATA EXTRACTION SPECIFICATIONS
   ===============================
-  - **name**: Identify the exact technical name of the model/series. Remove any Persian characters. Format it as a URL-friendly string if possible.
-  - **title**: Create a compelling Persian title. (e.g., "ایر مکس").
-  - **description**: Write a high-conversion marketing description (at least 3-4 sentences). Focus on:
-      - The core technology (e.g., cushioning, material).
-      - The target use case (e.g., professional running, lifestyle).
-      - The unique selling point (USP) of this specific serie.
+  - **name**: ${brand.prompts?.map(prompt => prompt.field === "name" ? prompt.context.toString() : null)}
+  - **title**: ${brand.prompts?.map(prompt => prompt.field === "title" ? prompt.context.toString() : null)}
+  - **description**: ${brand.prompts?.map(prompt => prompt.field === "description" ? prompt.context.toString() : null)}
   - **colors**: 
       - Search the text for color mentions (e.g., "قرمز زرشکی", "Black/Volt").
       - Convert them to the most accurate HEX codes.
@@ -34,8 +31,8 @@ export function buildSerieTemplate({ brandId, brandName, rawContent }) {
   ===============================
   CONTEXT & METADATA
   ===============================
-  - Parent Brand Name: ${brandName}
-  - Database Brand ID: ${brandId}
+  - Parent Brand Name: ${brand.name}
+  - Database Brand ID: ${brand._id}
   - Input Text: 
   """
   ${rawContent}
@@ -48,7 +45,7 @@ export function buildSerieTemplate({ brandId, brandName, rawContent }) {
     "name": "English-Serie-Name",
     "title": "عنوان فارسی سری",
     "description": "توضیحات جامع و تخصصی به زبان فارسی درباره ویژگی‌ها و کاربرد این سری محصولات...",
-    "brand": "${brandId}",
+    "brand": "${brand._id}",
     "colors": {
       "primary": "#HEX",
       "secondary": "#HEX"

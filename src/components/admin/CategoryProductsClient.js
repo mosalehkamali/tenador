@@ -84,7 +84,26 @@ export default function CategoryProductsClient({ categoryId }) {
       </div>
     );
   }
+  const handleDeleteProduct = async (product) => {
+    const confirmed = await confirmDelete(
+      'حذف محصول',
+      `آیا مطمئن هستید که می‌خواهید "${product.name}" را حذف کنید؟`
+    );
+    if (!confirmed) return;
 
+    try {
+      const res = await fetch(`/api/product/${product._id}`, { method: 'DELETE' });
+      if (res.ok) {
+        showToast.success('محصول با موفقیت حذف شد');
+        fetchProducts();
+      } else {
+        const data = await res.json();
+        showError('خطا', data.error || 'خطا در حذف محصول');
+      }
+    } catch (error) {
+      showError('خطا', 'خطا در حذف محصول');
+    }
+  };
   return (
     <div className="min-h-screen bg-[#fcfcfc] pb-20">
       {/* Header & Category Info Section */}
@@ -174,6 +193,7 @@ export default function CategoryProductsClient({ categoryId }) {
               <div key={product._id} className="transform transition-all duration-300 hover:-translate-y-2">
                 <ProductCard
                   product={product}
+                  onDelete={handleDeleteProduct}
                   onEdit={() => router.push(`/p-admin/admin-products/edit/${product._id}`)}
                   onViewVariants={() => router.push(`/p-admin/admin-products/${product._id}/variants`)}
                 />

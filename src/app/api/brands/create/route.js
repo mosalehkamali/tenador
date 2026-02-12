@@ -17,7 +17,7 @@ export async function POST(req) {
       logo = "",
       icon = "",
       image = "",
-      models = [],
+      prompts = [],
     } = body;
 
     // validation
@@ -45,17 +45,15 @@ export async function POST(req) {
       );
     }
 
-    // foundedYear sanity check
-    if (
-      foundedYear !== null &&
-      (typeof foundedYear !== "number" ||
-        foundedYear < 1800 ||
-        foundedYear > new Date().getFullYear())
-    ) {
-      return Response.json(
-        { error: "Founded year is invalid" },
-        { status: 400 }
-      );
+
+    let sanitizedPrompts = [];
+    if (Array.isArray(prompts)) {
+      sanitizedPrompts = prompts
+        .filter(p => p.field && p.context) // فقط مواردی که هر دو فیلد را دارند نگه دار
+        .map(p => ({
+          field: p.field.trim(),
+          context: p.context.trim()
+        }));
     }
 
     // duplicate check
@@ -77,7 +75,7 @@ export async function POST(req) {
       logo: logo.trim(),
       icon: icon.trim(),
       image: image.trim(),
-      models: Array.isArray(models) ? models : [],
+      prompts: sanitizedPrompts,
     });
 
     // register slug

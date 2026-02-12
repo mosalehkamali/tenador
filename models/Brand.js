@@ -60,6 +60,12 @@ const schema = new mongoose.Schema(
       }
     ],
 
+    prompts: [
+      {
+        field: String,
+        context: String
+      }
+    ],
 
     slug: {
       type: String,
