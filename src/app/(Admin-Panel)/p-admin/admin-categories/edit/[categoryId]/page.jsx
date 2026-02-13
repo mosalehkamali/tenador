@@ -2,15 +2,15 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { 
-  FiPlus, 
-  FiTrash2, 
-  FiChevronDown, 
-  FiChevronUp, 
-  FiLayers, 
-  FiTag, 
-  FiEdit3, 
-  FiMenu, 
+import {
+  FiPlus,
+  FiTrash2,
+  FiChevronDown,
+  FiChevronUp,
+  FiLayers,
+  FiTag,
+  FiEdit3,
+  FiMenu,
   FiX,
   FiSave
 } from 'react-icons/fi';
@@ -67,9 +67,9 @@ function SortableAttribute({ attr, onRemove, onEdit }) {
       className={`flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white border rounded-[var(--radius)] p-4 hover:shadow-md transition group ${isDragging ? 'border-[var(--color-primary)] ring-1 ring-[var(--color-primary)] shadow-lg' : 'border-neutral-200'}`}
     >
       <div className="flex items-center gap-4">
-        <div 
-          {...attributes} 
-          {...listeners} 
+        <div
+          {...attributes}
+          {...listeners}
           className="cursor-grab active:cursor-grabbing text-neutral-400 hover:text-neutral-600 p-2 bg-neutral-50 rounded"
         >
           <FiMenu size={18} />
@@ -88,7 +88,7 @@ function SortableAttribute({ attr, onRemove, onEdit }) {
           </div>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <Button
           type="button"
@@ -182,7 +182,7 @@ export default function EditCategory() {
 
       if (res.ok && data.category) {
         const cat = data.category;
-        
+
         setFormData({
           title: cat.title || '',
           name: cat.name || '',
@@ -216,49 +216,49 @@ export default function EditCategory() {
   };
 
   const handleParentChange = (parentId) => {
-  if (!parentId) {
-    setFormData(prev => ({ ...prev, parent: '' }));
-    return;
-  }
-
-  const selectedParent = categories.find(cat => cat._id === parentId);
-
-  if (selectedParent) {
-    const inheritedAttributes = (selectedParent.attributes || []).map((attr, index) => ({
-      ...attr,
-      id: `attr-child-${Math.random().toString(36).substr(2, 5)}-${Date.now()}-${index}`,
-      order: formData.attributes.length + index + 1
-    }));
-
-    if (selectedParent.prompts && selectedParent.prompts.length > 0) {
-      setProductPrompts(prevPrompts => {
-        return prevPrompts.map(currentPrompt => {
-          const parentPrompt = selectedParent.prompts.find(p => p.field === currentPrompt.field);
-          
-          if (parentPrompt && parentPrompt.context.trim() !== '') {
-            const separator = "\n\n------\n";
-            if (!currentPrompt.context.includes(parentPrompt.context)) {
-              return {
-                ...currentPrompt,
-                context: `${currentPrompt.context}${currentPrompt.context ? separator : ''}${parentPrompt.context}`
-              };
-            }
-          }
-          return currentPrompt;
-        });
-      });
+    if (!parentId) {
+      setFormData(prev => ({ ...prev, parent: '' }));
+      return;
     }
 
-    // ۳. بروزرسانی formData (ترکیب اتریبیوت‌های قدیمی و جدید)
-    setFormData(prev => ({
-      ...prev,
-      parent: '', // طبق درخواست شما والد ذخیره نمی‌شود
-      attributes: [...prev.attributes, ...inheritedAttributes]
-    }));
+    const selectedParent = categories.find(cat => cat._id === parentId);
 
-    showToast.success(`اطلاعات دسته "${selectedParent.title}" به لیست فعلی اضافه شد`);
-  }
-};
+    if (selectedParent) {
+      const inheritedAttributes = (selectedParent.attributes || []).map((attr, index) => ({
+        ...attr,
+        id: `attr-child-${Math.random().toString(36).substr(2, 5)}-${Date.now()}-${index}`,
+        order: formData.attributes.length + index + 1
+      }));
+
+      if (selectedParent.prompts && selectedParent.prompts.length > 0) {
+        setProductPrompts(prevPrompts => {
+          return prevPrompts.map(currentPrompt => {
+            const parentPrompt = selectedParent.prompts.find(p => p.field === currentPrompt.field);
+
+            if (parentPrompt && parentPrompt.context.trim() !== '') {
+              const separator = "\n\n------\n";
+              if (!currentPrompt.context.includes(parentPrompt.context)) {
+                return {
+                  ...currentPrompt,
+                  context: `${currentPrompt.context}${currentPrompt.context ? separator : ''}${parentPrompt.context}`
+                };
+              }
+            }
+            return currentPrompt;
+          });
+        });
+      }
+
+      // ۳. بروزرسانی formData (ترکیب اتریبیوت‌های قدیمی و جدید)
+      setFormData(prev => ({
+        ...prev,
+        parent: '', // طبق درخواست شما والد ذخیره نمی‌شود
+        attributes: [...prev.attributes, ...inheritedAttributes]
+      }));
+
+      showToast.success(`اطلاعات دسته "${selectedParent.title}" به لیست فعلی اضافه شد`);
+    }
+  };
   const normalizeOrders = (attrs) => {
     return attrs.map((attr, index) => ({
       ...attr,
@@ -277,7 +277,7 @@ export default function EditCategory() {
       label: currentAttribute.label,
       type: currentAttribute.type,
       required: currentAttribute.required,
-      options: currentAttribute.type === 'select' 
+      options: currentAttribute.type === 'select'
         ? (typeof currentAttribute.options === 'string' ? currentAttribute.options.split(',').map(o => o.trim()).filter(Boolean) : currentAttribute.options)
         : [],
       prompt: currentAttribute.prompt || '',
@@ -286,7 +286,7 @@ export default function EditCategory() {
     if (editingId) {
       setFormData((prev) => ({
         ...prev,
-        attributes: prev.attributes.map((attr) => 
+        attributes: prev.attributes.map((attr) =>
           attr.id === editingId ? { ...attr, ...attrData } : attr
         ),
       }));
@@ -466,10 +466,14 @@ export default function EditCategory() {
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <Select
-                    label="نوع ورودی"
+                    label="محل نمایش ویژگی"
                     value={currentAttribute.type}
                     onChange={(e) => setCurrentAttribute(p => ({ ...p, type: e.target.value }))}
-                    options={[{ value: 'string', label: 'متن' }, { value: 'number', label: 'عدد' }, { value: 'select', label: 'لیست' }]}
+                    options={[
+                      { value: 'string', label: 'جدول ویژگی' },
+                      { value: 'number', label: 'نمودار' },
+                      { value: 'select', label: 'لیست انتخابی' }
+                    ]}
                   />
                   <div className="mt-8">
                     <label className="flex items-center gap-2 text-sm font-bold cursor-pointer">

@@ -523,13 +523,13 @@ Correct name output:
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <Select
-                    label="نوع ورودی"
+                    label= "محل نمایش ویژگی"
                     value={currentAttribute.type}
                     onChange={(e) => setCurrentAttribute((p) => ({ ...p, type: e.target.value }))}
                     options={[
-                      { value: 'string', label: 'متن کوتاه' },
-                      { value: 'number', label: 'عدد' },
-                      { value: 'select', label: 'لیست انتخابی (Dropdown)' },
+                      { value: 'string', label: 'جدول ویژگی' },
+                      { value: 'number', label: 'نمودار' },
+                      { value: 'select', label: 'لیست انتخابی' },
                     ]}
                   />
 
