@@ -527,7 +527,7 @@ Correct name output:
                     value={currentAttribute.type}
                     onChange={(e) => setCurrentAttribute((p) => ({ ...p, type: e.target.value }))}
                     options={[
-                      { value: 'string', label: 'جدول ویژگی' },
+                      { value: 'string', label: 'جدول ویژگی ها' },
                       { value: 'number', label: 'نمودار' },
                       { value: 'select', label: 'لیست انتخابی' },
                     ]}
