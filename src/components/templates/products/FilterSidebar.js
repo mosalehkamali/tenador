@@ -122,7 +122,7 @@ function FilterGroup({ title, items, type, filters, setFilters }) {
             {items.map((item) => {
               // استخراج ID به صورت رشته
               const id = (item._id || item).toString();
-              const label = item.name || item.title || item;
+              const label = item.title || item.name || item;
               const isActive = filters[type]?.includes(id);
   
               return (
