@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FaEye, FaHeart, FaShoppingCart } from "react-icons/fa";
-import { FaRegHeart } from "react-icons/fa";
+import { FaEye, FaRegHeart, FaHeart } from "react-icons/fa";
 
 export default function ProductCard({
   image,
@@ -12,7 +11,6 @@ export default function ProductCard({
   discountPrice,
   brandLogo,
   onQuickView,
-  onAddToCart,
   onToggleWishlist,
   isWishlisted = false,
 }) {
@@ -20,104 +18,77 @@ export default function ProductCard({
   const safeDiscount = Number(discountPrice) || null;
 
   return (
-    <div className="relative bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-xl transition-shadow">
-      {/* Brand logo */}
+    <div className="group relative bg-white border border-gray-100 rounded-[6px] overflow-hidden flex flex-col transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+      
+      {/* Brand Logo - Minimalist */}
       {brandLogo && (
-        <div className="absolute top-3 left-3 z-10 bg-white rounded-md p-1 shadow">
-          <Image
-          src={brandLogo}
-          alt="brand"
-          width={32}
-          height={32}
-          className="object-contain"
-        />
+        <div className="absolute top-2 left-2 z-10">
+          <Image src={brandLogo} alt="brand" width={40} height={40} className="object-contain" />
         </div>
       )}
 
-      {/* Product image */}
-      <Link href={`/products/${slug}`}>
-      <div className="relative w-full aspect-square overflow-hidden">
+      {/* Product Image */}
+      <Link href={`/products/${slug}`} className="relative w-full aspect-square overflow-hidden bg-[#f9f9f9]">
         <Image
           src={image}
           alt={name}
           fill
-          className="object-cover"
-          />
-      </div>
-          </Link>
-
-      {/* Content */}
-      <div className="p-4 flex flex-col gap-2 flex-1">
-      <Link href={`/products/${slug}`}>
-        <h3 className="font-bold text-[17px] text-[#1a1a1a] line-clamp-1">
-          {name}
-        </h3>
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
+        />
       </Link>
 
-        <p className="text-sm text-gray-600 line-clamp-2">
+      {/* Content Area */}
+      <div className="p-4 flex flex-col flex-1 bg-white">
+        <Link href={`/products/${slug}`}>
+          <h3 className="font-bold text-[16px] text-[#1a1a1a] line-clamp-1 mb-1 hover:text-[#aa4725] transition-colors">
+            {name}
+          </h3>
+        </Link>
+        
+        <p className="text-[13px] text-gray-500 line-clamp-2 leading-relaxed h-10">
           {description}
         </p>
 
-        {/* Price */}
-        <div className="mt-2 flex items-center gap-2">
+        {/* Price Section */}
+        <div className="mt-4 mb-4">
           {safeDiscount ? (
-            <>
-              <span className="text-sm line-through text-gray-400">
+            <div className="flex flex-col">
+              <span className="text-[12px] line-through text-gray-400">
                 {safePrice.toLocaleString()} تومان
               </span>
-              <span className="font-bold text-[#aa4725]">
-                {safeDiscount.toLocaleString()} تومان
+              <span className="font-black text-[18px] text-[#aa4725]">
+                {safeDiscount.toLocaleString()} <small className="text-[11px] font-medium">تومان</small>
               </span>
-            </>
+            </div>
           ) : (
-            <span className="font-bold text-[#aa4725]">
-              {safePrice.toLocaleString()} تومان
+            <span className="font-black text-[18px] text-[#aa4725]">
+              {safePrice.toLocaleString()} <small className="text-[11px] font-medium">تومان</small>
             </span>
           )}
         </div>
 
-        {/* Actions */}
-        <div className="mt-auto flex items-center gap-2 pt-4">
-          {/* Quick view */}
-          <div className="relative group">
-            <button
-              onClick={onQuickView}
-              aria-label="نمایش سریع"
-              className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 hover:border-[#aa4725] hover:text-[#aa4725] transition"
-            >
-              <FaEye />
-            </button>
-            <span className="absolute -top-7 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-[#1a1a1a] text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-              نمایش سریع
-            </span>
-          </div>
-
-          {/* Add to cart */}
+        {/* Action Buttons - Modern Glass Style (Fixed) */}
+        <div className="flex gap-2 pt-3 border-t border-gray-50">
+          {/* Quick View Button - The Primary Action Now */}
           <button
-            onClick={onAddToCart}
-            className="flex-1 h-10 flex items-center justify-center gap-2 rounded-lg bg-[#aa4725] text-white font-medium hover:opacity-90 transition"
+            onClick={onQuickView}
+            className="flex-[3] h-11 flex items-center justify-center gap-2 rounded-[6px] bg-[#aa4725]/10 text-[#aa4725] border border-[#aa4725]/20 hover:bg-[#aa4725] hover:text-white transition-all duration-300 font-bold text-sm backdrop-blur-sm"
           >
-            <FaShoppingCart />
-            افزودن به سبد
+            <FaEye className="text-lg" />
+            مشاهده و خرید
           </button>
 
-          {/* Wishlist */}
-          <div className="relative group">
-            <button
-              onClick={onToggleWishlist}
-              aria-label="افزودن به علاقه‌مندی‌ها"
-              className={`w-10 h-10 flex items-center justify-center rounded-lg border transition ${
-                isWishlisted
-                  ? "border-[#aa4725] text-[#aa4725]"
-                  : "border-gray-200 hover:border-[#aa4725] hover:text-[#aa4725]"
-              }`}
-            >
-              {isWishlisted ? <FaHeart /> : <FaRegHeart />}
-            </button>
-            <span className="absolute -top-7 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-[#1a1a1a] text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-              افزودن به علاقه‌مندی‌ها
-            </span>
-          </div>
+          {/* Wishlist Button */}
+          <button
+            onClick={onToggleWishlist}
+            className={`flex-1 h-11 flex items-center justify-center rounded-[6px] border transition-all duration-300 ${
+              isWishlisted 
+              ? "bg-red-50 border-red-100 text-red-500" 
+              : "bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            }`}
+          >
+            {isWishlisted ? <FaHeart /> : <FaRegHeart />}
+          </button>
         </div>
       </div>
     </div>

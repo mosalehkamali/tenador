@@ -11,7 +11,7 @@ const ProductDescription = ({ description }) => {
       "
     >
       <div 
-      className="prose prose-blue max-w-none text-justify" 
+    className="selection:bg-[#aa4725]/10 selection:text-[#aa4725]"
       dangerouslySetInnerHTML={{ __html: description }} 
     />
     </div>

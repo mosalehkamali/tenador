@@ -2,37 +2,41 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ProductGallery = ({ images = [] }) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  if (!images.length) return null;
+  if (!images || images.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Main Image */}
-      <div
-        className="
-          relative aspect-square w-full overflow-hidden
-          border border-[hsl(var(--border))]
-          bg-[hsl(var(--card))]
-        "
-      >
-        <Image
-          key={activeIndex}
-          src={images[activeIndex]}
-          alt="تصویر محصول"
-          fill
-          priority
-          className="
-            object-cover
-            transition-opacity duration-300 ease-out
-          "
-        />
+    <div className="flex flex-col gap-4 w-full" dir="rtl">
+      {/* Main Image Container */}
+      <div className="relative group w-full">
+        <div className="relative aspect-square w-full overflow-hidden rounded-[6px] bg-[#fdfdfd] border border-gray-100 shadow-sm">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeIndex}
+              initial={{ opacity: 0, scale: 1.02 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="relative w-full h-full"
+            >
+              <Image
+                src={images[activeIndex]}
+                alt="نمای اصلی محصول"
+                fill
+                priority
+                className="object-contain p-6 transition-transform duration-700 group-hover:scale-110"
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Thumbnails */}
-      <div className="flex gap-3">
+      {/* Thumbnails - نمایش در زیر عکس اصلی */}
+      <div className="flex flex-wrap gap-3 mt-2">
         {images.map((image, index) => {
           const isActive = index === activeIndex;
 
@@ -41,19 +45,28 @@ const ProductGallery = ({ images = [] }) => {
               key={index}
               onClick={() => setActiveIndex(index)}
               className={`
-                relative h-16 w-16 overflow-hidden
-                border transition-all duration-200
-                ${isActive
-                  ? "border-[hsl(var(--primary))]"
-                  : "border-[hsl(var(--border))] opacity-70 hover:opacity-100"}
+                relative h-20 w-20 shrink-0 
+                rounded-[6px] overflow-hidden transition-all duration-300
+                border-2 group
+                ${isActive 
+                  ? "border-[#aa4725] shadow-md shadow-[#aa4725]/10 scale-105" 
+                  : "border-transparent bg-gray-50 hover:bg-white hover:border-gray-200"}
               `}
             >
               <Image
                 src={image}
-                alt={`تصویر ${index + 1}`}
+                alt={`بندانگشتی ${index + 1}`}
                 fill
-                className="object-cover"
+                className={`
+                  object-cover p-1.5 transition-transform duration-300
+                  ${isActive ? "scale-100" : "scale-90 opacity-50 group-hover:opacity-100"}
+                `}
               />
+              
+              {/* Overlay برای تمرکز بیشتر روی تصویر فعال */}
+              {!isActive && (
+                <div className="absolute inset-0 bg-white/10 group-hover:bg-transparent transition-colors" />
+              )}
             </button>
           );
         })}

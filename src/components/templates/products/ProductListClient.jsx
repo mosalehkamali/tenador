@@ -1,62 +1,84 @@
-// ===============================
-// app/products/ProductListClient.jsx (Client Component)
-// ===============================
-
 'use client';
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import ProductList from "./ProductList";
+import FilterSidebar from "./FilterSidebar"; // این کامپوننت را در ادامه می‌سازیم
+import SearchBar from "./SearchBar";
 
 export default function ProductListClient({ products: initialProducts }) {
-  const [products, setProducts] = useState(initialProducts);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    brands: [],      // حتماً آرایه خالی باشد
+    categories: [],  // حتماً آرایه خالی باشد
+    sports: [],      // حتماً آرایه خالی باشد
+    minPrice: 0,
+    maxPrice: 50000000,
+    onlyInStock: false,
+  });
 
-  const handleQuickView = (product) => {
-    console.log("Quick view:", product);
-  };
-
-  const handleAddToCart = (product) => {
-    console.log("Add to cart:", product.id);
-  };
-
-  const handleToggleWishlist = async (product) => {
-    // Check if user is logged in
-    try {
-      const res = await fetch('/api/auth/profile');
-      if (!res.ok) {
-        // User not logged in, redirect to login
-        window.location.href = '/login-register';
-        return;
-      }
-
-      // User is logged in, toggle wishlist
-      const wishlistRes = await fetch('/api/wishlist', {
-        method: product.isWishlisted ? 'DELETE' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product._id }),
-      });
-
-      if (wishlistRes.ok) {
-        setProducts((prev) =>
-          prev.map((p) =>
-            p._id === product._id
-              ? { ...p, isWishlisted: !p.isWishlisted }
-              : p
-          )
-        );
-      } else {
-        console.error('Failed to toggle wishlist');
-      }
-    } catch (error) {
-      console.error('Error toggling wishlist:', error);
-    }
-  };
+  // منطق فیلترینگ فوق حرفه‌ای
+  const filteredProducts = useMemo(() => {
+    return initialProducts.filter((product) => {
+      // سرچ متنی
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // فیلتر برند
+      const matchesBrand = filters.brands.length === 0 || 
+                           filters.brands.includes(product.brand?._id?.toString() || product.brand?.toString());
+  
+      // فیلتر ورزش
+      const matchesSport = filters.sports.length === 0 || 
+                           filters.sports.includes(product.sport?._id?.toString() || product.sport?.toString());
+  
+      // فیلتر کاتگوری
+      const matchesCategory = filters.categories.length === 0 || 
+                              filters.categories.includes(product.category?._id?.toString() || product.category?.toString());
+  
+      // فیلتر قیمت
+      const matchesPrice = product.basePrice >= filters.minPrice && product.basePrice <= filters.maxPrice;
+  
+      // فیلتر موجودی
+      const matchesStock = !filters.onlyInStock || product.stock > 0;
+  
+      return matchesSearch && matchesBrand && matchesSport && matchesCategory && matchesPrice && matchesStock;
+    });
+  }, [searchTerm, filters, initialProducts]);
 
   return (
-    <ProductList
-      products={products}
-      onQuickView={handleQuickView}
-      onAddToCart={handleAddToCart}
-      onToggleWishlist={handleToggleWishlist}
-    />
+    <div className="max-w-[1440px] mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8" dir="rtl">
+      
+      {/* Sidebar: فیلترهای پیشرفته */}
+      <aside className="w-full lg:w-1/4">
+        <FilterSidebar 
+          initialProducts={initialProducts} 
+          filters={filters} 
+          setFilters={setFilters} 
+        />
+      </aside>
+
+      {/* Main Content: سرچ و لیست محصولات */}
+      <main className="w-full lg:w-3/4">
+        <div className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-[6px] border border-gray-100 shadow-sm">
+          <div className="w-full md:w-1/2">
+            <SearchBar value={searchTerm} onChange={setSearchTerm} />
+          </div>
+          <div className="text-sm font-bold text-gray-500">
+             نمایش <span className="text-[#aa4725]">{filteredProducts.length}</span> محصول
+          </div>
+        </div>
+
+        {filteredProducts.length > 0 ? (
+          <ProductList
+            products={filteredProducts}
+            onAddToCart={(p) => console.log("Added", p)}
+            onToggleWishlist={(p) => console.log("Wishlist", p)}
+          />
+        ) : (
+          <div className="text-center py-20 bg-gray-50 rounded-[6px] border border-dashed border-gray-200">
+            <p className="text-gray-400 font-bold">محصولی با این مشخصات پیدا نشد :(</p>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
