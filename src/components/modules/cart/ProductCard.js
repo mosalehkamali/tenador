@@ -75,7 +75,7 @@ export default function ProductCard({
             className="flex-[3] h-11 flex items-center justify-center gap-2 rounded-[6px] bg-[#aa4725]/10 text-[#aa4725] border border-[#aa4725]/20 hover:bg-[#aa4725] hover:text-white transition-all duration-300 font-bold text-sm backdrop-blur-sm"
           >
             <FaEye className="text-lg" />
-            مشاهده و خرید
+            مشاهده
           </button>
 
           {/* Wishlist Button */}
